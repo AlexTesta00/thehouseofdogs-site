@@ -1,0 +1,13 @@
+# Dati runtime del form: mai nel repository
+site/.ht_richieste.log
+site/richieste.log
+
+# Materiali di lavoro pesanti (video raw, audit, bundle scaricati)
+review/hero-raw.mp4
+review/audit/
+review/old-bundle.js
+review/old-home.html
+
+# Sistema
+.DS_Store
+Thumbs.db

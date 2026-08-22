@@ -1,0 +1,76 @@
+# CI/CD House of Dogs
+# A ogni push su main: controlla la sintassi PHP e carica la cartella site/ su Hostinger via FTP.
+#
+# Segreti da creare su GitHub (Settings > Secrets and variables > Actions > New repository secret):
+#   FTP_SERVER    -> host FTP di Hostinger (hPanel > Siti web > Gestisci > File > Account FTP, es. ftp.tuodominio.it o un IP)
+#   FTP_USERNAME  -> nome utente FTP
+#   FTP_PASSWORD  -> password FTP
+# Variabile opzionale (Settings > Secrets and variables > Actions > Variables):
+#   FTP_SERVER_DIR -> cartella remota di destinazione. Default: ./public_html/
+#                     Se l'account FTP e' gia' radicato dentro public_html, imposta ./
+
+name: Deploy su Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hostinger
+  cancel-in-progress: false
+
+jobs:
+  verifica:
+    name: Controllo PHP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installa PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Lint di tutti i file PHP
+        run: |
+          set -e
+          find site -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Controllo asset essenziali
+        run: |
+          set -e
+          for f in site/index.php site/invia.php site/assets/hero-scrub.mp4 site/assets/hero-ambient.mp4 site/assets/css/custom.css site/assets/js/hero.js; do
+            [ -s "$f" ] || { echo "Manca o e' vuoto: $f"; exit 1; }
+          done
+          echo "Asset ok"
+
+  deploy:
+    name: Deploy FTP
+    needs: verifica
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Carica site/ su Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./site/
+          server-dir: ${{ vars.FTP_SERVER_DIR || './public_html/' }}
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 120000
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.ht_richieste.log
+            **/Thumbs.db
+            **/.DS_Store

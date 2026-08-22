@@ -12,6 +12,9 @@ $formErrore  = isset($_GET['errore']);
   <title>Cuccioli Toy in Vendita da Allevamento | House of Dogs</title>
   <meta name="description" content="Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna in tutta Italia. Prenota il tuo cucciolo.">
   <link rel="canonical" href="https://www.thehouseofdogs.it/">
+  <link rel="preload" href="assets/fonts/fraunces-500-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/figtree-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/fonts.css">
   <meta name="theme-color" content="#241a12">
 
   <meta property="og:type" content="website">
@@ -28,9 +31,6 @@ $formErrore  = isset($_GET['errore']);
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 5 43 21.5V40a3.5 3.5 0 0 1-3.5 3.5h-31A3.5 3.5 0 0 1 5 40V21.5Z' fill='%23241a12'/%3E%3Cellipse cx='24' cy='32.5' rx='5.4' ry='4.6' fill='%23b06a2e'/%3E%3Ccircle cx='16.5' cy='25.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='22' cy='22.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='28' cy='22.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='33.5' cy='25.5' r='2.7' fill='%23b06a2e'/%3E%3C/svg%3E">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -48,6 +48,7 @@ $formErrore  = isset($_GET['errore']);
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "House of Dogs",
+    "legalName": "House of Dogs di Giuseppe Falcicchio",
     "description": "Selezione di cuccioli toy italiani: Barboncino Toy, Maltipoo Toy, Maltese Toy e Bassotto Kaninchen. Consegna in tutta Italia.",
     "url": "https://www.thehouseofdogs.it/",
     "telephone": "+393770876017",
@@ -80,8 +81,8 @@ $formErrore  = isset($_GET['errore']);
       { "@type": "Question", "name": "Il cucciolo resterà davvero piccolo?", "acceptedAnswer": { "@type": "Answer", "text": "La taglia da adulto la scrive la genetica, non le promesse. Per questo selezioniamo linee toy seguite nel tempo e ti diciamo sempre peso e taglia dei genitori, con una stima onesta di come crescerà." } },
       { "@type": "Question", "name": "Che documenti ricevo con il cucciolo?", "acceptedAnswer": { "@type": "Answer", "text": "Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, pedigree del cucciolo e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui." } },
       { "@type": "Question", "name": "A che età consegnate i cuccioli?", "acceptedAnswer": { "@type": "Answer", "text": "Mai prima dei 60 giorni di vita, come prevede la legge italiana: è il tempo che serve a un cucciolo per crescere sereno accanto alla mamma. Alla consegna ha già il primo ciclo vaccinale." } },
-      { "@type": "Question", "name": "Quanto costa un cucciolo toy?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Niente costi a sorpresa dopo." } },
-      { "@type": "Question", "name": "Consegnate davvero in tutta Italia?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno e modalità di consegna." } },
+      { "@type": "Question", "name": "Quanto costa un cucciolo toy?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra, di norma il 30%, e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo." } },
+      { "@type": "Question", "name": "Consegnate davvero in tutta Italia?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno, modalità e rimborso delle spese di viaggio, sempre prima della prenotazione." } },
       { "@type": "Question", "name": "Barboncino e Maltipoo perdono pelo?", "acceptedAnswer": { "@type": "Answer", "text": "Pochissimo: sono tra le razze con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane è ipoallergenico al cento per cento, ma qui siamo molto vicini." } },
       { "@type": "Question", "name": "La taglia toy è riconosciuta ufficialmente?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende dalla razza: il Barboncino Toy è una varietà riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia più piccola, non una categoria ufficiale. Te lo diciamo chiaramente perché è così che vogliamo lavorare: parole oneste, cuccioli veri." } }
     ]
@@ -264,8 +265,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Il piccolo genio di casa: attento, elegante, sempre in sintonia con te.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Barboncino%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- STRIPE (link di TEST, da sostituire con quello live): Cucciolo Barboncino -->
-              <a id="prenota-barboncino" href="https://buy.stripe.com/test_28E14pgkN54Hfh06lU1Fe00" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- STRIPE (link LIVE): Cucciolo Barboncino -->
+              <a id="prenota-barboncino" href="https://buy.stripe.com/aFa7sM1Ha7A67ns2big7e02" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -285,8 +286,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Morbido e affettuoso, nato per stare in braccio. Le nostre cucciolate sono italiane, da genitori selezionati.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Maltipoo%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- STRIPE (link di TEST, da sostituire con quello live): Cucciolo Maltipoo Toy -->
-              <a id="prenota-maltipoo" href="https://buy.stripe.com/test_eVq3cx3y10Or6KubGe1Fe04" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- STRIPE (link LIVE): Cucciolo Maltipoo Toy -->
+              <a id="prenota-maltipoo" href="https://buy.stripe.com/5kQbJ299C6w2238eY4g7e06" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -306,8 +307,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Compagno storico dei salotti italiani: pulito, silenzioso, devoto.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Maltese%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- STRIPE (link di TEST, da sostituire con quello live): Cucciolo Maltese Toy -->
-              <a id="prenota-maltese" href="https://buy.stripe.com/test_4gM00ld8B0Or0m6h0y1Fe03" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- STRIPE (link LIVE): Cucciolo Maltese Toy -->
+              <a id="prenota-maltese" href="https://buy.stripe.com/6oU6oIfy0aMi8rwaHOg7e05" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -327,18 +328,20 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Il più piccolo dei bassotti: curioso, buffo, incollato a te.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Bassotto%20Kaninchen%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- STRIPE (link di TEST, da sostituire con quelli live): il Bassotto ha due varianti di colore -->
+              <!-- STRIPE (link LIVE): il Bassotto ha due varianti di colore -->
               <details id="prenota-bassotto" class="prenota-variants">
                 <summary class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</summary>
                 <div class="mt-2.5 flex flex-wrap gap-2">
-                  <a href="https://buy.stripe.com/test_28E14p3y154H4Cm39I1Fe02" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
-                  <a href="https://buy.stripe.com/test_14A28tb0t0Orfh0bGe1Fe01" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Cioccolato</a>
+                  <a href="https://buy.stripe.com/5kQ5kE4Tm8EacHM8zGg7e04" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
+                  <a href="https://buy.stripe.com/9B65kE1Ha4nUgY26ryg7e03" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Cioccolato</a>
                 </div>
               </details>
             </div>
           </div>
         </article>
       </div>
+
+      <p class="reveal mt-8 text-sm text-inksoft max-w-3xl"><span class="part">Con il bottone <strong>Prenota</strong> versi una caparra di prenotazione su pagine sicure Stripe. Prima ti confermiamo sempre tutto per iscritto: cucciolo, prezzo totale, documenti e consegna. <strong>La caparra non è rimborsabile</strong> in caso di rinuncia. La prenotazione è regolata dalle nostre <a href="termini.php" class="underline underline-offset-2 text-accent">Condizioni di vendita</a>.</span></p>
     </div>
   </section>
 
@@ -513,11 +516,11 @@ $formErrore  = isset($_GET['errore']);
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Quanto costa un cucciolo toy?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Niente costi a sorpresa dopo.</p>
+          <p class="mt-3 text-inksoft">Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra, di norma il 30%, e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo.</p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Consegnate davvero in tutta Italia?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno e modalità di consegna.</p>
+          <p class="mt-3 text-inksoft">Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno, modalità e rimborso delle spese di viaggio, sempre prima della prenotazione.</p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Barboncino e Maltipoo perdono pelo?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
@@ -634,12 +637,12 @@ $formErrore  = isset($_GET['errore']);
         <li><a class="hover:text-cream transition-colors" href="tel:+393770876017">+39 377 087 6017</a></li>
         <li><a class="hover:text-cream transition-colors break-all" href="mailto:houseofdogdigiuseppe@outlook.it">houseofdogdigiuseppe@outlook.it</a></li>
         <li><a class="hover:text-cream transition-colors" href="privacy.php">Privacy Policy</a></li>
-        <li><a class="hover:text-cream transition-colors" href="termini.php">Termini e Condizioni</a></li>
+        <li><a class="hover:text-cream transition-colors" href="termini.php">Condizioni di vendita</a></li>
       </ul>
     </div>
   </div>
   <div class="border-t border-white/10">
-    <p class="mx-auto max-w-6xl px-6 py-5 text-xs opacity-70">© 2026 House of Dogs. Tutti i diritti riservati. · P.IVA 03933680401 · PEC: casadipluto@pec.buffetti.it</p>
+    <p class="mx-auto max-w-6xl px-6 py-5 text-xs opacity-70">© 2026 House of Dogs di Giuseppe Falcicchio. Tutti i diritti riservati. · P.IVA 03933680401 · PEC: casadipluto@pec.buffetti.it</p>
   </div>
 </footer>
 

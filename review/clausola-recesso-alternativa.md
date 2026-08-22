@@ -1,0 +1,75 @@
+# Clausola recesso/caparra: versione conforme proposta dalla ricerca legale
+
+ART. X - PRENOTAZIONE, CAPARRA CONFIRMATORIA E DIRITTO DI RECESSO
+
+X.1 Natura della somma versata. La somma versata dal Cliente per prenotare il cucciolo (pari al [20-30]% del prezzo e comunque non superiore a euro [____]) è corrisposta a titolo di caparra confirmatoria ai sensi dell'art. 1385 c.c. e sarà imputata al prezzo al momento della consegna. Non costituisce acconto né corrispettivo di un servizio.
+
+X.2 Effetti della caparra (art. 1385 c.c.). Fuori dai casi in cui la legge riconosce al Cliente il diritto di recesso (punto X.4), se il Cliente rinuncia all'acquisto o non adempie (mancato pagamento del saldo o mancato ritiro del cucciolo entro [15] giorni dalla data concordata), l'Allevamento potrà recedere dal contratto trattenendo la caparra. Se è l'Allevamento a non adempiere per causa a sé imputabile (mancata consegna del cucciolo prenotato), il Cliente potrà recedere ed esigere il doppio della caparra. Se la consegna diventa impossibile per cause non imputabili all'Allevamento (decesso, malattia o esito negativo dei controlli veterinari del cucciolo), la caparra sarà restituita per intero entro 14 giorni, salvo diverso accordo scritto per un cucciolo di altra cucciolata.
+
+X.3 Modalità di conclusione della prenotazione. La prenotazione si perfeziona, a scelta del Cliente:
+a) in allevamento: dopo la visita, l'incontro con la cucciolata e la scelta del cucciolo, con sottoscrizione del Modulo di prenotazione alla presenza dell'Allevatore. In tal caso il successivo pagamento della caparra tramite link di pagamento (Stripe) costituisce mera esecuzione di un contratto negoziato e concluso nei locali dell'Allevamento e non un contratto a distanza (art. 45, comma 1, lett. g, Codice del consumo; considerando 20 Direttiva 2011/83/UE); al contratto non si applica pertanto il diritto di recesso di cui agli artt. 52 e seguenti del Codice del consumo;
+b) a distanza: tramite il sito, senza precedente negoziazione in allevamento. In tal caso si applicano le norme sui contratti a distanza e il Cliente consumatore gode del diritto di recesso descritto al punto X.4.
+
+X.4 Diritto di recesso del consumatore nei contratti a distanza. Se il Cliente è un consumatore e la prenotazione è conclusa a distanza (X.3 lett. b), egli ha il diritto di recedere dal contratto, senza indicarne le ragioni e senza penalità, entro 14 giorni dal giorno in cui egli (o un terzo da lui designato) acquisisce il possesso fisico del cucciolo; il recesso può essere esercitato anche prima della consegna. Per esercitarlo è sufficiente una dichiarazione esplicita inviata a [email/PEC/indirizzo], anche mediante il modulo allegato (Allegato I-B, Codice del consumo). In caso di recesso l'Allevamento rimborserà tutti i pagamenti ricevuti, compresa la caparra, senza indebito ritardo e comunque entro 14 giorni dal ricevimento della comunicazione, utilizzando lo stesso mezzo di pagamento usato dal Cliente, salvo diverso accordo. Se il cucciolo è già stato consegnato, il Cliente dovrà riconsegnarlo all'Allevamento senza indebito ritardo e comunque entro 14 giorni dalla comunicazione, sostenendone il costo diretto; l'Allevamento potrà trattenere il rimborso fino alla riconsegna del cucciolo (art. 56, comma 3).
+
+X.5 Casi in cui la caparra viene trattenuta. Ferme le norme inderogabili del Codice del consumo, la caparra è trattenuta ai sensi del punto X.2 quando: (i) il contratto è stato negoziato e concluso in allevamento (X.3 lett. a); (ii) il Cliente non è un consumatore (acquista nell'esercizio di attività imprenditoriale o professionale, incluso altro allevamento); (iii) la rinuncia è comunicata dopo la scadenza del termine di recesso; (iv) il Cliente non paga il saldo o non ritira il cucciolo alla data concordata senza aver esercitato il recesso nei termini.
+
+X.6 [OPZIONALE - rischio medio] Prestazioni accessorie richieste durante il periodo di recesso. Se il Cliente chiede espressamente, spuntando l'apposita casella, che l'Allevamento esegua prima della scadenza del termine di recesso prestazioni accessorie quotate separatamente nel preventivo (intestazione pedigree/ENCI, microchip e iscrizione anagrafe, vaccinazioni o test aggiuntivi, trasporto), e successivamente recede, egli è tenuto a corrispondere un importo proporzionale alle prestazioni eseguite fino alla comunicazione del recesso (art. 57, comma 3, Codice del consumo), che potrà essere compensato con la somma da restituire. Tale importo non può in alcun caso eccedere il costo documentato delle prestazioni eseguite.
+
+X.7 Clausola di salvaguardia. Le presenti condizioni costituiscono informativa ai sensi dell'art. 49, comma 1, lett. h), Codice del consumo. Nulla in esse esclude o limita i diritti inderogabili riconosciuti al consumatore (art. 143 Codice del consumo). Qualora una previsione risulti in contrasto con norme imperative, essa si intende sostituita o ridotta nei limiti di legge, restando valido il resto del contratto (art. 36).
+
+NOTE OPERATIVE (non inserire nel testo): 1) eliminare dal sito ogni frase tipo «non esiste diritto di recesso» o «caparra mai rimborsabile»; 2) per la via X.3 lett. a) conservare modulo firmato in loco, data della visita e foto/registro: l'onere di provare che il contratto non è a distanza grava sull'allevatore; 3) inviare via email la conferma d'ordine con queste condizioni e il modulo di recesso (art. 51 co. 7) per far decorrere i 14 giorni ed evitare l'estensione a 12 mesi ex art. 53; 4) mantenere la caparra proporzionata (max 20-30%) e bilaterale (doppio), per restare fuori dall'art. 33 lett. e) ed f); 5) nel checkout Stripe inserire la casella di presa visione delle condizioni e, se si usa X.6, la casella separata di richiesta espressa di esecuzione anticipata.
+
+## Perche
+
+PARZIALE. Per via contrattuale: NO. Per via strutturale: SI'.
+
+1) Non escludibile per contratto. Art. 143 co. 1 Cod. cons.: i diritti del consumatore sono irrinunciabili ed è nulla ogni pattuizione contraria; art. 25 Dir. 2011/83/UE (carattere imperativo); art. 56 co. 1 ultimo periodo: è nulla qualsiasi clausola che limiti il rimborso delle somme versate in caso di recesso; art. 52 co. 1: recesso senza motivazione e senza costi diversi da quelli degli artt. 56 co. 2 e 57. Il professionista rimborsa «tutti i pagamenti ricevuti» entro 14 giorni con lo stesso mezzo (Stripe): la caparra rientra tra i pagamenti ricevuti (MIMIT FAQ; dottrina: il rimborso comprende anche la caparra confirmatoria). La caparra trattenuta è inoltre attaccabile come vessatoria ex art. 33 co. 2 lett. e) (trattenere somme se il consumatore non conclude o recede, senza prevedere il doppio a suo favore) e lett. f) (penale manifestamente eccessiva); Cass. 6639/2012 applica la lett. e) anche ai negozi preparatori (proposta irrevocabile / prenotazione); Cass. 6558/2010: la caparra confirmatoria non è di per sé vessatoria se resta bilaterale ex art. 1385 c.c. e proporzionata.
+
+2) Il cucciolo è un «bene»: art. 128 co. 2 lett. e) n. 3 Cod. cons. (D.Lgs. 170/2021) include espressamente «gli animali vivi» (l'Italia non ha usato la facoltà di esclusione dell'art. 3 par. 5 lett. b Dir. 2019/771); Cass. 22728/2018: animale venduto da allevatore professionale a privato = bene di consumo, acquirente = consumatore; Trib. Roma 11190/2023: allevatore = professionista, nulle le clausole che limitano i suoi obblighi verso il consumatore. Un allevamento con sito, prenotazione e caparra via Stripe integra un «regime organizzato di vendita a distanza» (art. 45 co. 1 lett. g): il contratto è a distanza e scatta il recesso di 14 giorni dalla consegna (art. 52 co. 2 lett. b); per il considerando 40 della Direttiva il consumatore deve poter recedere anche PRIMA di acquisire il possesso fisico del bene (quindi tra caparra e consegna a mano), con rimborso integrale della caparra.
+
+3) Vie strutturali lecite: (a) contratto NON a distanza: considerando 20 Dir. 2011/83 e commento art. 45 Cod. cons.: se il consumatore si limita a visitare i locali per informarsi e poi conclude a distanza è contratto a distanza; ma «un contratto negoziato nei locali del professionista e concluso definitivamente mediante mezzi di comunicazione a distanza» NON è contratto a distanza. Quindi: visita in allevamento, scelta del cucciolo e negoziazione/firma del modulo di prenotazione in presenza, con il pagamento Stripe come mera esecuzione -> niente recesso ex art. 52 e piena operatività della caparra ex art. 1385 c.c. (onere della prova sull'allevatore: serve modulo firmato in loco e registro visite); (b) acquirente non consumatore (altro allevatore, professionista); (c) rinuncia comunicata DOPO la scadenza del termine di recesso o inadempimento (mancato saldo/ritiro) senza recesso tempestivo: qui la caparra può essere legittimamente trattenuta, purché bilaterale (doppio se inadempie l'allevatore) e proporzionata (indicativamente 20-30% del prezzo). Fuori da questi casi la frase «non esiste diritto di recesso e la caparra non è rimborsabile» è nulla e pericolosa.
+
+## Fonti
+
+Art. 59 Cod. cons. (eccezioni al recesso): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-ii/art59.html
+Art. 52 Cod. cons. (diritto di recesso): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-ii/art52.html
+Art. 53 Cod. cons. (mancata informazione, 12 mesi): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-ii/art53.html
+Art. 56 Cod. cons. (rimborso di tutti i pagamenti, nullità clausole limitative): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-ii/art56.html
+Art. 57 Cod. cons. (obblighi del consumatore, importo proporzionale co. 3): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-ii/art57.html
+Art. 45 Cod. cons. (definizione contratto a distanza, visita ai locali): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-i/art45.html
+Art. 33 Cod. cons. (clausole vessatorie, lett. e ed f): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-i/art33.html
+Art. 36 Cod. cons. (nullità di protezione): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-i/art36.html
+Art. 37-bis Cod. cons. (tutela amministrativa AGCM clausole vessatorie): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-i/art37bis.html
+Art. 27 Cod. cons. (sanzioni AGCM 5.000-10.000.000 euro): https://www.brocardi.it/codice-del-consumo/parte-ii/titolo-iii/capo-iii/art27.html
+Art. 66 Cod. cons. (competenza AGCM su artt. 45-67): https://www.brocardi.it/codice-del-consumo/parte-iii/titolo-iii/capo-i/sezione-iv/art66.html
+Art. 143 Cod. cons. (irrinunciabilità dei diritti): https://www.brocardi.it/codice-del-consumo/parte-vi/art143.html
+Art. 128 Cod. cons. (definizione di beni: animali vivi inclusi): https://www.brocardi.it/codice-del-consumo/parte-iv/titolo-iii/capo-i/art128.html
+Direttiva 2011/83/UE testo IT (considerando 20 e 40, art. 16, art. 25): https://eur-lex.europa.eu/legal-content/IT/TXT/HTML/?uri=CELEX:32011L0083
+Orientamenti Commissione UE 2021 sulla Dir. 2011/83 (par. 5.11.2 e 5.11.3, nessun riferimento ad animali): https://eur-lex.europa.eu/legal-content/IT/TXT/HTML/?uri=CELEX:52021XC1229(04)
+Guidance DG Justice 2014 sulla Dir. 2011/83: https://commission.europa.eu/system/files/2019-07/crd_guidance_en_0_updated_0.pdf
+CGUE C-529/19 Möbel Kraft (beni su misura): https://eur-lex.europa.eu/legal-content/IT/TXT/HTML/?uri=CELEX%3A62019CJ0529&from=EN
+CGUE C-681/17 slewo (interpretazione restrittiva eccezioni): https://www.eius.it/giurisprudenza/2019/164
+Cass. 22728/2018 (animale d'affezione = bene di consumo): https://www.professionegiustizia.it/documenti/notizia/2018/animale-affezione-essere-un-bene-di-consumo-trovando-applicazione-il-codice-del-consumo
+Cass. 6639/2012 (art. 33 lett. e applicabile a proposta irrevocabile/caparra): https://www.professionegiustizia.it/documenti/notizia/2012/proposta_irrevocabile_e_caparra_confirmatoria
+Cass. 6558/2010 (caparra confirmatoria non vessatoria di per sé): https://umbertodavide.it/clausola-caparra-confirmatoria-clausola-contrattuale-c-d-vessatoria/
+Trib. Roma 11190/2023 (allevatore = professionista, clausole nulle): https://apps.dirittopratico.it/sentenza/tribunale/roma/2023/11190.html
+Trib. Novara 711/2023 (caparra sproporzionata, riduzione): https://apps.dirittopratico.it/sentenza/tribunale/novara/2023/711.html
+La Legge per Tutti - Acquisto animale: spetta il diritto di recesso?: https://www.laleggepertutti.it/553698_acquisto-animale-spetta-il-diritto-di-recesso
+La Legge per Tutti - Diritto di recesso acquisto cane: https://www.laleggepertutti.it/477561_diritto-di-recesso-acquisto-cane
+MIMIT FAQ diritto di recesso: https://www.mimit.gov.it/it/assistenza/domande-frequenti/diritto-di-recesso-domande-frequenti-faq
+AGCM - Diritto di recesso (convienesaperlo): https://convienesaperlo.agcm.it/diritto/diritto-di-recesso/
+AGCM PS12515 Mondo Convenienza, sanzione 3,2 mln (2024): https://www.consumersforum.it/news/5509-agcm-sanzione-di-oltre-3-milioni-a-mondo-convenienza.html
+AGCM eDreams 2026, ostacoli al recesso art. 26 lett. f: https://www.studiolegalestefanelli.it/it/approfondimenti/abbonamenti-ecommerce-recesso-agcm-edreams
+AGCM e violazioni recesso nell'e-commerce: https://assistenza-legale-imprese.it/lagcm-e-le-violazioni-del-codice-del-consumo-nelle-commerce/
+D.Lgs. 170/2021 e inclusione animali vivi: https://www.altalex.com/documents/news/2021/12/03/codice-del-consumo-le-modifiche-alla-disciplina-sulla-vendita-di-beni
+Germania - IT-Recht Kanzlei, vendita online animali vivi e Widerrufsrecht: https://www.it-recht-kanzlei.de/verkauf-lebende-tiere.html
+Germania - Händlerbund, animali non sono merce deperibile: https://ohn.haendlerbund.de/recht/rechtsfragen/135099-rechtslage-online-kauf-lebenden-tieren
+Germania - anwalt.de su § 312g Abs. 2 Nr. 2 BGB animali/piante: https://www.anwalt.de/rechtstipps/ausschlusstatbestand-312g-abs2-nr2-bgb-online-handel-tiere-pflanzen-und-kein-widerrufsrecht_169946.html
+OLG Celle 4.12.2012, 2 U 154/12 (alberi vivi non deperibili): https://rechtsprechung.niedersachsen.de/jportal/?docid=KORE202262013&max=true&psml=bsndprod.psml&quelle=jlink
+Francia - art. L221-28 Code de la consommation (nessuna eccezione animali): https://www.legifrance.gouv.fr/codes/id/LEGISCTA000032226844/
+Regno Unito - forum su deposito non rimborsabile cuccioli e Consumer Contracts Regulations: https://forums.moneysavingexpert.com/discussion/5015091/distance-selling-regs-non-refundable-deposit-live-animals
+ECC-Net su recesso prima della consegna: https://www.europe-consommateurs.eu/en/topics/guarantees/withdrawal/
+Esempio prassi allevamenti IT (caparra trattenuta senza informativa recesso): https://www.beagledinonnafilomena.it/contratto-di-compravendita-garanzia-e-condizioni-di-vendita/
+Esempio prassi allevamenti IT (caparra alla visita in allevamento): https://allevamentocasaheidi.it/condizioni-di-vendita/
+Esempio prassi allevamenti IT (prenotazione con caparra): https://www.mylabrador.it/booking/
