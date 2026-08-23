@@ -12,10 +12,9 @@ $formErrore  = isset($_GET['errore']);
   <title>Cuccioli Toy in Vendita da Allevamento | House of Dogs</title>
   <meta name="description" content="Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna in tutta Italia. Prenota il tuo cucciolo.">
   <link rel="canonical" href="https://www.thehouseofdogs.it/">
-  <link rel="preload" href="assets/fonts/fraunces-500-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/figtree-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
-  <meta name="theme-color" content="#241a12">
+  <meta name="theme-color" content="#0c3a66">
 
   <meta property="og:type" content="website">
   <meta property="og:locale" content="it_IT">
@@ -23,21 +22,33 @@ $formErrore  = isset($_GET['errore']);
   <meta property="og:title" content="Cuccioli Toy in Vendita da Allevamento | House of Dogs">
   <meta property="og:description" content="Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna a mano in tutta Italia.">
   <meta property="og:url" content="https://www.thehouseofdogs.it/">
-  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-cover.jpg">
+  <!-- Anteprima condivisione (WhatsApp, Facebook, Instagram, Telegram): il logo su fondo bianco, 1200x630 -->
+  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:image:secure_url" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo House of Dogs">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Cuccioli Toy in Vendita da Allevamento | House of Dogs">
   <meta name="twitter:description" content="Cuccioli toy selezionati, sani e socializzati. Consegna a mano in tutta Italia.">
-  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-cover.jpg">
+  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta name="twitter:image:alt" content="Logo House of Dogs">
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 5 43 21.5V40a3.5 3.5 0 0 1-3.5 3.5h-31A3.5 3.5 0 0 1 5 40V21.5Z' fill='%23241a12'/%3E%3Cellipse cx='24' cy='32.5' rx='5.4' ry='4.6' fill='%23b06a2e'/%3E%3Ccircle cx='16.5' cy='25.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='22' cy='22.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='28' cy='22.5' r='2.7' fill='%23b06a2e'/%3E%3Ccircle cx='33.5' cy='25.5' r='2.7' fill='%23b06a2e'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
 
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: { extend: {
-        colors: { accent: '#b06a2e', canvas: '#f8f3ec', deep: '#241a12', deeppanel: '#31251b', ink: '#2b211a', inksoft: '#6b5d50', cream: '#f4ece1', creamsoft: '#c9b8a6' },
-        fontFamily: { display: ['Fraunces', 'Georgia', 'serif'], body: ['Figtree', 'system-ui', 'sans-serif'], monolabel: ['"DM Mono"', 'monospace'] }
+        /* Palette bianco e azzurro dal logo. I nomi cream/creamsoft restano per compatibilita con il markup:
+           oggi valgono bianco e azzurro ghiaccio (testo sulle sezioni blu). */
+        colors: { accent: '#1470b3', sky: '#1a90d0', canvas: '#ffffff', panel: '#f3f8fd', deep: '#0c3a66', deeppanel: '#11457a', ink: '#0f2a44', inksoft: '#4a6079', cream: '#ffffff', creamsoft: '#c5dcf2' },
+        /* Un solo carattere: Inter. display/body/monolabel puntano tutti a Inter, i pesi li decide custom.css */
+        fontFamily: { display: ['Inter', 'system-ui', 'sans-serif'], body: ['Inter', 'system-ui', 'sans-serif'], monolabel: ['Inter', 'system-ui', 'sans-serif'] }
       } }
     };
   </script>
@@ -56,7 +67,12 @@ $formErrore  = isset($_GET['errore']);
     "vatID": "IT03933680401",
     "address": { "@type": "PostalAddress", "addressCountry": "IT" },
     "areaServed": { "@type": "Country", "name": "Italia" },
-    "image": "https://www.thehouseofdogs.it/assets/img/og-cover.jpg"
+    "image": "https://www.thehouseofdogs.it/assets/img/og-image.jpg",
+    "logo": "https://www.thehouseofdogs.it/assets/img/logo.jpg",
+    "sameAs": [
+      "https://www.instagram.com/house_of_dog_official/",
+      "https://www.facebook.com/mysweetspuppies"
+    ]
   }
   </script>
   <script type="application/ld+json">
@@ -99,15 +115,8 @@ $formErrore  = isset($_GET['errore']);
 <header id="topnav" class="fixed top-0 inset-x-0 z-50 transition-colors duration-500">
   <nav class="mx-auto max-w-6xl flex items-center justify-between gap-3 px-4 sm:px-6 py-3" aria-label="Principale">
     <a href="#" class="flex items-center gap-2.5 text-cream" aria-label="House of Dogs, torna su">
-      <svg width="34" height="34" viewBox="0 0 48 48" aria-hidden="true" class="shrink-0">
-        <path d="M24 5 43 21.5V40a3.5 3.5 0 0 1-3.5 3.5h-31A3.5 3.5 0 0 1 5 40V21.5Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
-        <ellipse cx="24" cy="32.5" rx="5" ry="4.3" fill="#b06a2e"/>
-        <circle cx="17" cy="25.8" r="2.5" fill="#b06a2e"/>
-        <circle cx="22.2" cy="23" r="2.5" fill="#b06a2e"/>
-        <circle cx="27.8" cy="23" r="2.5" fill="#b06a2e"/>
-        <circle cx="33" cy="25.8" r="2.5" fill="#b06a2e"/>
-      </svg>
-      <span class="font-display font-semibold text-lg leading-none">House of Dogs</span>
+      <img src="assets/img/favicon-192.png" alt="" width="40" height="40" decoding="async" class="w-10 h-10 rounded-full shrink-0 ring-2 ring-white/80 bg-white">
+      <span class="font-display text-lg leading-none">House of Dogs</span>
     </a>
     <div class="hidden md:flex items-center gap-7 text-sm text-cream/90">
       <a class="nav-link hover:text-white transition-colors" href="#cuccioli">Cuccioli</a>
@@ -231,7 +240,7 @@ $formErrore  = isset($_GET['errore']);
 
   <!-- ============ STRISCIA FIDUCIA ============ -->
   <section class="bg-canvas border-b border-ink/10" aria-label="Le nostre garanzie in breve">
-    <div class="mx-auto max-w-6xl px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 font-monolabel text-[11px] md:text-xs text-inksoft">
+    <div class="trust-strip mx-auto max-w-6xl px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 font-monolabel text-[11px] md:text-xs text-inksoft">
       <div class="flex items-center gap-2.5"><span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" aria-hidden="true"></span>20 anni di selezione</div>
       <div class="flex items-center gap-2.5"><span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" aria-hidden="true"></span>Consegna a mano in tutta Italia</div>
       <div class="flex items-center gap-2.5"><span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" aria-hidden="true"></span>Microchip e libretto sanitario</div>
@@ -552,6 +561,18 @@ $formErrore  = isset($_GET['errore']);
           <a href="mailto:houseofdogdigiuseppe@outlook.it" class="btn btn-ghost rounded-2xl px-6 py-4 font-semibold flex items-center justify-between overflow-hidden">
             <span class="truncate">houseofdogdigiuseppe@outlook.it</span><span aria-hidden="true" class="shrink-0 ml-2">→</span>
           </a>
+          <a href="https://www.instagram.com/house_of_dog_official/" target="_blank" rel="noopener" class="btn btn-social rounded-2xl px-6 py-4 font-semibold flex items-center justify-between gap-3">
+            <span class="flex items-center gap-3">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+              <span>Seguici su Instagram</span>
+            </span><span aria-hidden="true">→</span>
+          </a>
+          <a href="https://www.facebook.com/mysweetspuppies" target="_blank" rel="noopener" class="btn btn-social rounded-2xl px-6 py-4 font-semibold flex items-center justify-between gap-3">
+            <span class="flex items-center gap-3">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.2h2.4l.4-2.9h-2.8V9.1c0-.8.3-1.4 1.4-1.4h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.1H8v2.9h2.5V21h3Z"/></svg>
+              <span>Seguici su Facebook</span>
+            </span><span aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
 
@@ -595,7 +616,7 @@ $formErrore  = isset($_GET['errore']);
             <textarea id="f-msg" name="messaggio" rows="4" class="field w-full rounded-xl px-4 py-3 text-ink" placeholder="Es. Cerco una femmina di Barboncino Toy albicocca, siamo una famiglia con due bambini..."></textarea>
           </div>
           <label class="flex items-start gap-3 text-sm text-creamsoft">
-            <input type="checkbox" name="privacy" required class="mt-1 accent-[#b06a2e]">
+            <input type="checkbox" name="privacy" required class="mt-1 accent-[#8ccdfb]">
             <span>Ho letto l'<a href="privacy.php" class="underline underline-offset-2 hover:text-cream">informativa privacy</a> e acconsento al trattamento dei dati per essere ricontattato.</span>
           </label>
           <button type="submit" class="btn btn-primary rounded-full px-8 py-3.5 font-semibold justify-self-start">Invia la richiesta</button>
@@ -610,14 +631,11 @@ $formErrore  = isset($_GET['errore']);
 <footer class="bg-deep text-creamsoft border-t border-white/10">
   <div class="mx-auto max-w-6xl px-6 py-14 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
     <div>
-      <div class="flex items-center gap-2.5 text-cream">
-        <svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true">
-          <path d="M24 5 43 21.5V40a3.5 3.5 0 0 1-3.5 3.5h-31A3.5 3.5 0 0 1 5 40V21.5Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
-          <ellipse cx="24" cy="32.5" rx="5" ry="4.3" fill="#b06a2e"/>
-          <circle cx="17" cy="25.8" r="2.5" fill="#b06a2e"/><circle cx="22.2" cy="23" r="2.5" fill="#b06a2e"/>
-          <circle cx="27.8" cy="23" r="2.5" fill="#b06a2e"/><circle cx="33" cy="25.8" r="2.5" fill="#b06a2e"/>
-        </svg>
-        <span class="font-display font-semibold text-lg">House of Dogs</span>
+      <div class="flex items-center gap-4 text-cream">
+        <span class="inline-flex items-center justify-center bg-white rounded-2xl p-2 shrink-0">
+          <img src="assets/img/logo.png" alt="Logo House of Dogs" width="96" height="96" loading="lazy" decoding="async" class="w-24 h-24">
+        </span>
+        <span class="font-display text-lg">House of Dogs</span>
       </div>
       <p class="mt-4 max-w-sm text-sm">Da 20 anni, cuccioli toy selezionati con passione, dalla nostra famiglia alla tua.</p>
       <p class="mt-6 text-xs opacity-70">I visual di apertura sono generati digitalmente. I cuccioli nelle foto delle razze sono reali.</p>

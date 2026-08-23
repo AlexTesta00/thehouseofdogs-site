@@ -101,7 +101,7 @@
   onScrollNav();
 
   var style = document.createElement('style');
-  style.textContent = '#topnav.nav-solid{background:rgba(36,26,18,.92);backdrop-filter:blur(12px);box-shadow:0 8px 30px -18px rgba(0,0,0,.5)}';
+  style.textContent = '#topnav.nav-solid{background:rgba(12,58,102,.92);backdrop-filter:blur(12px);box-shadow:0 8px 30px -18px rgba(4,16,30,.5)}';
   document.head.appendChild(style);
 
   var menuBtn = document.getElementById('menu-btn');
@@ -202,7 +202,7 @@
       });
       quiz.querySelectorAll('.quiz-dot').forEach(function (d) {
         var dn = Number(d.getAttribute('data-dot'));
-        d.style.background = (typeof n === 'number' && dn <= n) || n === 'result' ? 'var(--accent)' : 'rgba(255,255,255,.2)';
+        d.style.background = (typeof n === 'number' && dn <= n) || n === 'result' ? 'var(--accent-on-deep)' : 'rgba(255,255,255,.2)';
       });
     }
     function finish() {

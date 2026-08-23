@@ -7,32 +7,47 @@
   <meta name="description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdogs.it.">
   <meta name="robots" content="noindex, follow">
   <link rel="canonical" href="https://www.thehouseofdogs.it/privacy.php">
-  <link rel="preload" href="assets/fonts/fraunces-500-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/figtree-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:site_name" content="House of Dogs">
+  <meta property="og:title" content="Privacy e Cookie Policy | House of Dogs">
+  <meta property="og:description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdogs.it.">
+  <meta property="og:url" content="https://www.thehouseofdogs.it/privacy.php">
+  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo House of Dogs">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
+  <meta name="theme-color" content="#0c3a66">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/custom.css">
   <style>
-    .legal h2{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:600;margin-top:2.2rem;margin-bottom:.6rem;color:var(--text-primary)}
+    .legal h2{font-family:'Inter',system-ui,sans-serif;font-size:1.35rem;font-weight:700;letter-spacing:-.015em;margin-top:2.2rem;margin-bottom:.6rem;color:var(--text-primary)}
     .legal h3{font-weight:700;margin-top:1.2rem;margin-bottom:.3rem}
     .legal p,.legal li{line-height:1.7;color:var(--text-primary)}
     .legal ul{list-style:disc;padding-left:1.3rem;display:grid;gap:.35rem}
     .legal table{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:.6rem}
-    .legal th,.legal td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid rgba(107,93,80,.22)}
-    .legal th{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}
+    .legal th,.legal td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid rgba(74,96,121,.22)}
+    .legal th{font-weight:600;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}
     .legal a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
     .toc a{text-decoration:none}
     .toc li{padding:.2rem 0}
   </style>
 </head>
-<body class="font-body" style="font-family:'Figtree',sans-serif">
+<body class="font-body" style="font-family:'Inter',system-ui,sans-serif">
 <main class="legal mx-auto max-w-3xl px-6 py-16">
   <a href="./" class="text-sm underline underline-offset-4" style="color:var(--accent)">← Torna al sito</a>
-  <p class="font-monolabel text-xs mt-8" style="color:var(--accent);font-family:'DM Mono',monospace;letter-spacing:.14em">INFORMATIVA PRIVACY E COOKIE</p>
-  <h1 class="font-display text-4xl mt-3" style="font-family:'Fraunces',serif">Come trattiamo i tuoi dati</h1>
+  <p class="font-monolabel text-xs mt-8" style="color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase">INFORMATIVA PRIVACY E COOKIE</p>
+  <h1 class="font-display text-4xl mt-3">Come trattiamo i tuoi dati</h1>
   <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 21 agosto 2026.</p>
 
-  <nav class="toc mt-8 p-5 rounded-2xl" style="background:var(--panel);border:1px solid rgba(107,93,80,.2)" aria-label="Indice">
+  <nav class="toc mt-8 p-5 rounded-2xl" style="background:var(--panel);border:1px solid rgba(74,96,121,.2)" aria-label="Indice">
     <p class="font-semibold mb-2">Indice</p>
     <ol class="grid gap-0 text-sm list-decimal pl-5">
       <li><a href="#titolare">Titolare del trattamento</a></li>

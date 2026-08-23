@@ -1,5 +1,6 @@
 /* Harness di audit: guida Chrome headless via DevTools protocol.
-   Uso: node audit.mjs <url> <outdir> [--rm] [--mobile] [--block=pattern]
+   Uso: node audit.mjs <url> <outdir> [--rm] [--mobile] [--block=pattern] [--anchor=selettore]
+   --anchor: scatta un solo screenshot con l'elemento indicato in cima al viewport (es. --anchor=#main)
    Screenshot a piu viewport + errori console + overflow orizzontale. */
 
 import { execSync, spawn } from 'node:child_process';
@@ -14,6 +15,8 @@ const reducedMotion = flags.includes('--rm');
 const mobileOnly = flags.includes('--mobile');
 const blockArg = flags.find(f => f.startsWith('--block='));
 const blockPattern = blockArg ? blockArg.slice(8) : null;
+const anchorArg = flags.find(f => f.startsWith('--anchor='));
+const anchor = anchorArg ? anchorArg.slice(9) : null;
 
 mkdirSync(outDir, { recursive: true });
 
@@ -115,6 +118,13 @@ async function run() {
     })`, returnByValue: true });
     report.views[v.name] = JSON.parse(probe.result.value);
 
+    if (anchor) {
+      await send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(anchor)}).scrollIntoView({block:'start'})` });
+      await sleep(1200);
+      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 82 });
+      writeFileSync(join(outDir, `${v.name}-anchor.jpg`), Buffer.from(shot.data, 'base64'));
+      continue;
+    }
     const positions = v.mobile ? [0, 0.35, 0.75, 1] : [0, 0.12, 0.28, 0.45, 0.62, 0.8, 0.92, 1];
     for (let i = 0; i < positions.length; i++) {
       const p = positions[i];
