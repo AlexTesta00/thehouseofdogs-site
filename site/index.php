@@ -11,7 +11,7 @@ $formErrore  = isset($_GET['errore']);
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cuccioli Toy in Vendita da Allevamento | House of Dogs</title>
   <meta name="description" content="Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna in tutta Italia. Prenota il tuo cucciolo.">
-  <link rel="canonical" href="https://www.thehouseofdogs.it/">
+  <link rel="canonical" href="https://www.thehouseofdog.it/">
   <link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
   <meta name="theme-color" content="#0c3a66">
@@ -21,10 +21,10 @@ $formErrore  = isset($_GET['errore']);
   <meta property="og:site_name" content="House of Dogs">
   <meta property="og:title" content="Cuccioli Toy in Vendita da Allevamento | House of Dogs">
   <meta property="og:description" content="Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna a mano in tutta Italia.">
-  <meta property="og:url" content="https://www.thehouseofdogs.it/">
+  <meta property="og:url" content="https://www.thehouseofdog.it/">
   <!-- Anteprima condivisione (WhatsApp, Facebook, Instagram, Telegram): il logo su fondo bianco, 1200x630 -->
-  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
-  <meta property="og:image:secure_url" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
+  <meta property="og:image:secure_url" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@ $formErrore  = isset($_GET['errore']);
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Cuccioli Toy in Vendita da Allevamento | House of Dogs">
   <meta name="twitter:description" content="Cuccioli toy selezionati, sani e socializzati. Consegna a mano in tutta Italia.">
-  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta name="twitter:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <meta name="twitter:image:alt" content="Logo House of Dogs">
 
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
@@ -61,14 +61,14 @@ $formErrore  = isset($_GET['errore']);
     "name": "House of Dogs",
     "legalName": "House of Dogs di Giuseppe Falcicchio",
     "description": "Selezione di cuccioli toy italiani: Barboncino Toy, Maltipoo Toy, Maltese Toy e Bassotto Kaninchen. Consegna in tutta Italia.",
-    "url": "https://www.thehouseofdogs.it/",
+    "url": "https://www.thehouseofdog.it/",
     "telephone": "+393770876017",
     "email": "houseofdogdigiuseppe@outlook.it",
     "vatID": "IT03933680401",
     "address": { "@type": "PostalAddress", "addressCountry": "IT" },
     "areaServed": { "@type": "Country", "name": "Italia" },
-    "image": "https://www.thehouseofdogs.it/assets/img/og-image.jpg",
-    "logo": "https://www.thehouseofdogs.it/assets/img/logo.jpg",
+    "image": "https://www.thehouseofdog.it/assets/img/og-image.jpg",
+    "logo": "https://www.thehouseofdog.it/assets/img/logo.jpg",
     "sameAs": [
       "https://www.instagram.com/house_of_dog_official/",
       "https://www.facebook.com/mysweetspuppies"
@@ -81,10 +81,10 @@ $formErrore  = isset($_GET['errore']);
     "@type": "ItemList",
     "name": "Cuccioli toy in vendita",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Barboncino Toy", "url": "https://www.thehouseofdogs.it/#barboncino-toy", "image": "https://www.thehouseofdogs.it/assets/img/barboncino-toy.webp" },
-      { "@type": "ListItem", "position": 2, "name": "Maltipoo Toy", "url": "https://www.thehouseofdogs.it/#maltipoo-toy", "image": "https://www.thehouseofdogs.it/assets/img/maltipoo-toy.webp" },
-      { "@type": "ListItem", "position": 3, "name": "Maltese Toy", "url": "https://www.thehouseofdogs.it/#maltese-toy", "image": "https://www.thehouseofdogs.it/assets/img/maltese-toy.webp" },
-      { "@type": "ListItem", "position": 4, "name": "Bassotto Kaninchen", "url": "https://www.thehouseofdogs.it/#bassotto-kaninchen", "image": "https://www.thehouseofdogs.it/assets/img/bassotto-kaninchen.webp" }
+      { "@type": "ListItem", "position": 1, "name": "Barboncino Toy", "url": "https://www.thehouseofdog.it/#barboncino-toy", "image": "https://www.thehouseofdog.it/assets/img/barboncino-toy.webp" },
+      { "@type": "ListItem", "position": 2, "name": "Maltipoo Toy", "url": "https://www.thehouseofdog.it/#maltipoo-toy", "image": "https://www.thehouseofdog.it/assets/img/maltipoo-toy.webp" },
+      { "@type": "ListItem", "position": 3, "name": "Maltese Toy", "url": "https://www.thehouseofdog.it/#maltese-toy", "image": "https://www.thehouseofdog.it/assets/img/maltese-toy.webp" },
+      { "@type": "ListItem", "position": 4, "name": "Bassotto Kaninchen", "url": "https://www.thehouseofdog.it/#bassotto-kaninchen", "image": "https://www.thehouseofdog.it/assets/img/bassotto-kaninchen.webp" }
     ]
   }
   </script>

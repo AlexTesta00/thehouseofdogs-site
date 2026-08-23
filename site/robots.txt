@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /invia.php
 
-Sitemap: https://www.thehouseofdogs.it/sitemap.xml
+Sitemap: https://www.thehouseofdog.it/sitemap.xml

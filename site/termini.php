@@ -6,19 +6,19 @@
   <title>Condizioni di Vendita e Politiche dell'Azienda | House of Dogs</title>
   <meta name="description" content="Condizioni di vendita dei cuccioli House of Dogs: prenotazione con caparra non rimborsabile, pagamenti tracciabili, finanziamento soggetto ad approvazione, consegna, garanzia legale.">
   <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://www.thehouseofdogs.it/termini.php">
+  <link rel="canonical" href="https://www.thehouseofdog.it/termini.php">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="it_IT">
   <meta property="og:site_name" content="House of Dogs">
   <meta property="og:title" content="Condizioni di Vendita e Politiche dell'Azienda | House of Dogs">
   <meta property="og:description" content="Condizioni di vendita dei cuccioli House of Dogs: prenotazione con caparra non rimborsabile, pagamenti tracciabili, finanziamento soggetto ad approvazione, consegna, garanzia legale.">
-  <meta property="og:url" content="https://www.thehouseofdogs.it/termini.php">
-  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:url" content="https://www.thehouseofdog.it/termini.php">
+  <meta property="og:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Logo House of Dogs">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta name="twitter:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
   <meta name="theme-color" content="#0c3a66">
@@ -71,7 +71,7 @@
   <p>Il venditore è <strong>House of Dogs di Giuseppe Falcicchio</strong> (ditta individuale), P.IVA 03933680401, email <a href="mailto:houseofdogdigiuseppe@outlook.it">houseofdogdigiuseppe@outlook.it</a>, PEC casadipluto@pec.buffetti.it, telefono +39 377 087 6017 (di seguito "House of Dogs" o "noi"). House of Dogs agisce come venditore professionale.</p>
 
   <h2 id="ambito">2. Ambito e definizioni</h2>
-  <p>Queste condizioni regolano ogni prenotazione e vendita di cuccioli conclusa a distanza tramite il sito thehouseofdogs.it, i collegamenti di pagamento raggiungibili dal sito e i canali di contatto indicati (WhatsApp, telefono, email). Per "acquirente" o "tu" si intende la persona fisica maggiorenne che prenota o acquista un cucciolo. Prenotando accetti queste condizioni, che ti invitiamo a leggere con attenzione e a conservare.</p>
+  <p>Queste condizioni regolano ogni prenotazione e vendita di cuccioli conclusa a distanza tramite il sito thehouseofdog.it, i collegamenti di pagamento raggiungibili dal sito e i canali di contatto indicati (WhatsApp, telefono, email). Per "acquirente" o "tu" si intende la persona fisica maggiorenne che prenota o acquista un cucciolo. Prenotando accetti queste condizioni, che ti invitiamo a leggere con attenzione e a conservare.</p>
 
   <h2 id="oggetto">3. Oggetto della vendita e informazioni sui cuccioli</h2>
   <p>House of Dogs seleziona e vende cuccioli delle razze presentate sul sito: Barboncino Toy, Maltipoo Toy, Maltese Toy e Bassotto Kaninchen. Le foto e le descrizioni sul sito hanno valore illustrativo. Prima di qualsiasi prenotazione ti forniamo per iscritto (email o WhatsApp) le caratteristiche del cucciolo specifico: razza, sesso, colore, data di nascita, peso e taglia dei genitori, stima onesta della taglia da adulto, stato delle vaccinazioni, documenti che verranno consegnati, prezzo complessivo, importo della caparra, tempi e costi di consegna. Queste informazioni costituiscono parte integrante del contratto (art. 49 del Codice del Consumo).</p>

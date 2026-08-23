@@ -6,8 +6,10 @@
 #   FTP_USERNAME  -> nome utente FTP
 #   FTP_PASSWORD  -> password FTP
 # Variabile opzionale (Settings > Secrets and variables > Actions > Variables):
-#   FTP_SERVER_DIR -> cartella remota di destinazione. Default: ./public_html/
-#                     Se l'account FTP e' gia' radicato dentro public_html, imposta ./
+#   FTP_SERVER_DIR -> cartella remota di destinazione. Default: ./
+#                     L'account FTP di Hostinger e' gia' radicato dentro public_html (verificato il 2026-08-23:
+#                     con ./public_html/ i file finivano in public_html/public_html/). Impostare la variabile
+#                     solo se l'account FTP dovesse cambiare radice.
 
 name: Deploy su Hostinger
 
@@ -64,7 +66,7 @@ jobs:
           protocol: ftp
           port: 21
           local-dir: ./site/
-          server-dir: ${{ vars.FTP_SERVER_DIR || './public_html/' }}
+          server-dir: ${{ vars.FTP_SERVER_DIR || './' }}
           state-name: .ftp-deploy-sync-state.json
           timeout: 120000
           log-level: standard

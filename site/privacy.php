@@ -4,21 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy e Cookie Policy | House of Dogs</title>
-  <meta name="description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdogs.it.">
+  <meta name="description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdog.it.">
   <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://www.thehouseofdogs.it/privacy.php">
+  <link rel="canonical" href="https://www.thehouseofdog.it/privacy.php">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="it_IT">
   <meta property="og:site_name" content="House of Dogs">
   <meta property="og:title" content="Privacy e Cookie Policy | House of Dogs">
-  <meta property="og:description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdogs.it.">
-  <meta property="og:url" content="https://www.thehouseofdogs.it/privacy.php">
-  <meta property="og:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta property="og:description" content="Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR) e cookie policy del sito thehouseofdog.it.">
+  <meta property="og:url" content="https://www.thehouseofdog.it/privacy.php">
+  <meta property="og:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Logo House of Dogs">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://www.thehouseofdogs.it/assets/img/og-image.jpg">
+  <meta name="twitter:image" content="https://www.thehouseofdog.it/assets/img/og-image.jpg">
   <link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
   <meta name="theme-color" content="#0c3a66">

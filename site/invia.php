@@ -67,7 +67,7 @@ if (!in_array($razza, $razzeValide, true)) {
 }
 
 $oggetto = 'Nuova richiesta cucciolo dal sito: ' . $razza;
-$corpo = "Nuova richiesta dal sito thehouseofdogs.it\n\n"
+$corpo = "Nuova richiesta dal sito thehouseofdog.it\n\n"
        . "Nome: {$nome}\n"
        . "Telefono: " . ($telefono !== '' ? $telefono : 'non indicato') . "\n"
        . "Email: " . ($email !== '' ? $email : 'non indicata') . "\n"
@@ -76,7 +76,7 @@ $corpo = "Nuova richiesta dal sito thehouseofdogs.it\n\n"
        . "Inviato il: " . date('d/m/Y H:i') . "\n"
        . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'sconosciuto') . "\n";
 
-$dominio = $_SERVER['SERVER_NAME'] ?? 'thehouseofdogs.it';
+$dominio = $_SERVER['SERVER_NAME'] ?? 'thehouseofdog.it';
 $headers = 'From: House of Dogs <noreply@' . $dominio . '>' . "\r\n"
          . ($email !== '' ? 'Reply-To: ' . $email . "\r\n" : '')
          . 'X-Mailer: PHP/' . phpversion() . "\r\n"

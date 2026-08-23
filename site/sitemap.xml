@@ -2,23 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://www.thehouseofdogs.it/</loc>
+    <loc>https://www.thehouseofdog.it/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://www.thehouseofdogs.it/assets/img/barboncino-toy.webp</image:loc>
+      <image:loc>https://www.thehouseofdog.it/assets/img/barboncino-toy.webp</image:loc>
       <image:title>Cucciolo di Barboncino Toy in vendita</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://www.thehouseofdogs.it/assets/img/maltipoo-toy.webp</image:loc>
+      <image:loc>https://www.thehouseofdog.it/assets/img/maltipoo-toy.webp</image:loc>
       <image:title>Cuccioli di Maltipoo Toy in vendita</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://www.thehouseofdogs.it/assets/img/maltese-toy.webp</image:loc>
+      <image:loc>https://www.thehouseofdog.it/assets/img/maltese-toy.webp</image:loc>
       <image:title>Cucciolo di Maltese Toy in vendita</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://www.thehouseofdogs.it/assets/img/bassotto-kaninchen.webp</image:loc>
+      <image:loc>https://www.thehouseofdog.it/assets/img/bassotto-kaninchen.webp</image:loc>
       <image:title>Cuccioli di Bassotto Kaninchen in vendita</image:title>
     </image:image>
   </url>
