@@ -68,7 +68,7 @@
   </nav>
 
   <h2 id="venditore">1. Chi vende</h2>
-  <p>Il venditore è <strong>House of Dogs di Giuseppe Falcicchio</strong> (ditta individuale), P.IVA 03933680401, email <a href="mailto:houseofdogdigiuseppe@outlook.it">houseofdogdigiuseppe@outlook.it</a>, PEC casadipluto@pec.buffetti.it, telefono +39 377 087 6017 (di seguito "House of Dogs" o "noi"). House of Dogs agisce come venditore professionale.</p>
+  <p>Il venditore è <strong>The House Of Dog di G.F.</strong>, impresa individuale di Giuseppe Falcicchio con sede in Contrada Marinella s.n.c., 70022 Altamura (BA), P.IVA 03933680401, REA BA-638471, email <a href="mailto:houseofdogdigiuseppe@outlook.it">houseofdogdigiuseppe@outlook.it</a>, PEC casadipluto@pec.buffetti.it, telefono +39 377 087 6017 (di seguito "House of Dogs" o "noi"). House of Dogs agisce come venditore professionale.</p>
 
   <h2 id="ambito">2. Ambito e definizioni</h2>
   <p>Queste condizioni regolano ogni prenotazione e vendita di cuccioli conclusa a distanza tramite il sito thehouseofdog.it, i collegamenti di pagamento raggiungibili dal sito e i canali di contatto indicati (WhatsApp, telefono, email). Per "acquirente" o "tu" si intende la persona fisica maggiorenne che prenota o acquista un cucciolo. Prenotando accetti queste condizioni, che ti invitiamo a leggere con attenzione e a conservare.</p>

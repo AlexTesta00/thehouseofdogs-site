@@ -59,13 +59,13 @@ $formErrore  = isset($_GET['errore']);
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "House of Dogs",
-    "legalName": "House of Dogs di Giuseppe Falcicchio",
+    "legalName": "The House Of Dog di G.F.",
     "description": "Selezione di cuccioli toy italiani: Barboncino Toy, Maltipoo Toy, Maltese Toy e Bassotto Kaninchen. Consegna in tutta Italia.",
     "url": "https://www.thehouseofdog.it/",
     "telephone": "+393770876017",
     "email": "houseofdogdigiuseppe@outlook.it",
     "vatID": "IT03933680401",
-    "address": { "@type": "PostalAddress", "addressCountry": "IT" },
+    "address": { "@type": "PostalAddress", "streetAddress": "Contrada Marinella s.n.c.", "postalCode": "70022", "addressLocality": "Altamura", "addressRegion": "BA", "addressCountry": "IT" },
     "areaServed": { "@type": "Country", "name": "Italia" },
     "image": "https://www.thehouseofdog.it/assets/img/og-image.jpg",
     "logo": "https://www.thehouseofdog.it/assets/img/logo.jpg",
@@ -660,7 +660,7 @@ $formErrore  = isset($_GET['errore']);
     </div>
   </div>
   <div class="border-t border-white/10">
-    <p class="mx-auto max-w-6xl px-6 py-5 text-xs opacity-70">© 2026 House of Dogs di Giuseppe Falcicchio. Tutti i diritti riservati. · P.IVA 03933680401 · PEC: casadipluto@pec.buffetti.it</p>
+    <p class="mx-auto max-w-6xl px-6 py-5 text-xs opacity-70">© 2026 The House Of Dog di G.F. Tutti i diritti riservati. · P.IVA 03933680401 · PEC: casadipluto@pec.buffetti.it</p>
   </div>
 </footer>
 

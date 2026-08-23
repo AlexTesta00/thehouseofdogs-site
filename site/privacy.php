@@ -66,7 +66,7 @@
   </nav>
 
   <h2 id="titolare">1. Titolare del trattamento</h2>
-  <p>Il titolare del trattamento è <strong>Giuseppe Falcicchio</strong>, titolare della ditta individuale House of Dogs, P.IVA 03933680401.</p>
+  <p>Il titolare del trattamento è <strong>Giuseppe Falcicchio</strong>, titolare dell'impresa individuale <strong>The House Of Dog di G.F.</strong>, con sede in Contrada Marinella s.n.c., 70022 Altamura (BA), P.IVA 03933680401, REA BA-638471.</p>
   <ul>
     <li>Email: <a href="mailto:houseofdogdigiuseppe@outlook.it">houseofdogdigiuseppe@outlook.it</a></li>
     <li>PEC: casadipluto@pec.buffetti.it</li>
