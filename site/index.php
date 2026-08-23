@@ -275,7 +275,7 @@ $formErrore  = isset($_GET['errore']);
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Barboncino%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
               <!-- STRIPE (link LIVE): Cucciolo Barboncino -->
-              <a id="prenota-barboncino" href="https://buy.stripe.com/aFa7sM1Ha7A67ns2big7e02" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <a id="prenota-barboncino" href="https://buy.stripe.com/8x27sMbhK3jQgY2bLSg7e0b" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -341,7 +341,7 @@ $formErrore  = isset($_GET['errore']);
               <details id="prenota-bassotto" class="prenota-variants">
                 <summary class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</summary>
                 <div class="mt-2.5 flex flex-wrap gap-2">
-                  <a href="https://buy.stripe.com/5kQ5kE4Tm8EacHM8zGg7e04" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
+                  <a href="https://buy.stripe.com/8x2dRa99C3jQ8rwg28g7e09" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
                   <a href="https://buy.stripe.com/9B65kE1Ha4nUgY26ryg7e03" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Cioccolato</a>
                 </div>
               </details>
