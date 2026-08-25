@@ -109,7 +109,7 @@
   <h2 id="prezzi">7. Prezzi, IVA e costi aggiuntivi</h2>
   <ul>
     <li>I prezzi dei cuccioli comunicati sono da intendersi <strong>IVA esclusa</strong>. Il prezzo complessivo, comprensivo di IVA e di ogni costo applicabile, ti viene sempre confermato per iscritto prima della prenotazione e non cambia dopo la conferma. L'importo complessivo viene adeguato secondo la normativa fiscale vigente.</li>
-    <li>Il prezzo include tutti i servizi standard legati alla cessione del cucciolo: microchip e iscrizione all'anagrafe canina, libretto sanitario con le vaccinazioni e le sverminazioni effettuate fino alla consegna, visita veterinaria pre-consegna e accordo di vendita scritto. Il certificato di razza in prima origine non è compreso nel prezzo: i costi saranno a carico del cliente.</li>
+    <li>Il prezzo include tutti i servizi standard legati alla cessione del cucciolo: microchip e iscrizione all'anagrafe canina, libretto sanitario con le vaccinazioni e le sverminazioni effettuate fino alla consegna, visita veterinaria pre-consegna e accordo di vendita scritto. Il certificato di razza in prima origine non è compreso nel prezzo: si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente.</li>
     <li><strong>Tutti i costi relativi ai passaggi di proprietà sono a carico del cliente.</strong></li>
     <li>Spese aggiuntive come trasporto e gestione documentale non sono comprese nel prezzo e vengono comunicate separatamente, sempre prima della prenotazione.</li>
   </ul>
@@ -128,7 +128,7 @@
     <li>I cuccioli vengono consegnati <strong>mai prima dei 60 giorni di vita</strong> (o del termine superiore previsto dalla normativa regionale applicabile), dopo il primo ciclo vaccinale e la visita veterinaria.</li>
     <li>Puoi ritirare il cucciolo in sede, previo appuntamento, oppure richiedere la <strong>consegna a domicilio in tutta Italia</strong>, effettuata a mano: il cucciolo viaggia accompagnato, nel rispetto del suo benessere e della normativa sul trasporto degli animali.</li>
     <li>La consegna a domicilio è un servizio offerto previo <strong>rimborso delle spese di viaggio</strong>, da stabilire al momento della compravendita tenendo conto dei tratti autostradali e del carburante. L'importo ti viene comunicato per iscritto prima della prenotazione.</li>
-    <li>Alla consegna ricevi: libretto sanitario compilato dal veterinario, certificato di iscrizione all'anagrafe canina con il numero di microchip, certificato di razza in prima origine (i costi saranno a carico del cliente), modulo per il passaggio di proprietà, accordo di vendita firmato e ricevuta o fattura.</li>
+    <li>Alla consegna ricevi: libretto sanitario compilato dal veterinario, certificato di iscrizione all'anagrafe canina con il numero di microchip, certificato di razza in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente), modulo per il passaggio di proprietà, accordo di vendita firmato e ricevuta o fattura.</li>
     <li>Il rischio di perimento del cucciolo passa a te con la consegna materiale. Se non fosse possibile effettuare la consegna nel giorno concordato per causa a te imputabile, concorderemo una nuova data; i costi documentati del secondo viaggio sono a tuo carico.</li>
   </ul>
 
