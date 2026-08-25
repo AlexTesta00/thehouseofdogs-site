@@ -95,7 +95,7 @@ $formErrore  = isset($_GET['errore']);
     "mainEntity": [
       { "@type": "Question", "name": "Come faccio a fidarmi? Il web è pieno di truffe sui cuccioli.", "acceptedAnswer": { "@type": "Answer", "text": "Hai ragione a essere prudente. Per questo non ti chiediamo mai di fidarti al buio: ti mostriamo i cuccioli in foto e video dal vivo prima di qualsiasi decisione, rispondiamo al telefono con nome e cognome e ogni consegna viaggia con documenti e accordi scritti. Siamo un'attività registrata, con partita IVA visibile sul sito, e in 20 anni abbiamo accompagnato centinaia di famiglie." } },
       { "@type": "Question", "name": "Il cucciolo resterà davvero piccolo?", "acceptedAnswer": { "@type": "Answer", "text": "La taglia da adulto la scrive la genetica, non le promesse. Per questo selezioniamo linee toy seguite nel tempo e ti diciamo sempre peso e taglia dei genitori, con una stima onesta di come crescerà." } },
-      { "@type": "Question", "name": "Che documenti ricevo con il cucciolo?", "acceptedAnswer": { "@type": "Answer", "text": "Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, pedigree del cucciolo e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui." } },
+      { "@type": "Question", "name": "Che documenti ricevo con il cucciolo?", "acceptedAnswer": { "@type": "Answer", "text": "Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di razza in prima origine (i costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui." } },
       { "@type": "Question", "name": "A che età consegnate i cuccioli?", "acceptedAnswer": { "@type": "Answer", "text": "Mai prima dei 60 giorni di vita, come prevede la legge italiana: è il tempo che serve a un cucciolo per crescere sereno accanto alla mamma. Alla consegna ha già il primo ciclo vaccinale." } },
       { "@type": "Question", "name": "Quanto costa un cucciolo toy?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra, di norma il 30%, e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo." } },
       { "@type": "Question", "name": "Consegnate davvero in tutta Italia?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno, modalità e rimborso delle spese di viaggio, sempre prima della prenotazione." } },
@@ -205,7 +205,7 @@ $formErrore  = isset($_GET['errore']);
           <span class="sr-only">Portalo a casa.</span>
           <span aria-hidden="true" data-split-rise>Portalo a casa.</span>
         </p>
-        <p class="settle-sub mt-5 text-lg lg:text-xl text-cream/90 max-w-xl mx-auto">Consegna a mano in tutta Italia, con microchip, libretto sanitario e pedigree.</p>
+        <p class="settle-sub mt-5 text-lg lg:text-xl text-cream/90 max-w-xl mx-auto">Consegna a mano in tutta Italia, con microchip, libretto sanitario e certificato di razza in prima origine (i costi saranno a carico del cliente).</p>
         <div class="settle-cta mt-8 flex flex-wrap items-center justify-center gap-3">
           <a href="https://wa.me/393770876017?text=Ciao!%20Ho%20visto%20il%20sito%20e%20vorrei%20informazioni%20sui%20cuccioli%20disponibili." target="_blank" rel="noopener" class="btn btn-wa rounded-full px-6 py-3 font-semibold">Scrivici su WhatsApp</a>
           <a href="#cuccioli" class="btn btn-ghost rounded-full px-6 py-3 font-semibold">Scopri i cuccioli</a>
@@ -379,7 +379,7 @@ $formErrore  = isset($_GET['errore']);
         <li class="part bg-deeppanel rounded-2xl p-6 md:p-7 border border-white/5">
           <p class="font-monolabel text-[10px] text-accent mb-2">03</p>
           <h3 class="font-display text-xl">Documenti veri, sempre</h3>
-          <p class="mt-2 text-creamsoft">Ogni cucciolo parte con microchip, libretto sanitario compilato dal veterinario e pedigree. Tutto nero su bianco.</p>
+          <p class="mt-2 text-creamsoft">Ogni cucciolo parte con microchip e libretto sanitario compilato dal veterinario; su richiesta, certificato di razza in prima origine (i costi saranno a carico del cliente). Tutto nero su bianco.</p>
         </li>
         <li class="part bg-deeppanel rounded-2xl p-6 md:p-7 border border-white/5">
           <p class="font-monolabel text-[10px] text-accent mb-2">04</p>
@@ -517,7 +517,7 @@ $formErrore  = isset($_GET['errore']);
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Che documenti ricevo con il cucciolo?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, pedigree del cucciolo e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui.</p>
+          <p class="mt-3 text-inksoft">Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di razza in prima origine (i costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui.</p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>A che età consegnate i cuccioli?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
