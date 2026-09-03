@@ -81,12 +81,12 @@
   <ol class="steps">
     <li><strong>Contatto e scelta.</strong> Ci scrivi, ti mandiamo foto, video e disponibilità, scegli il cucciolo.</li>
     <li><strong>Conferma scritta delle condizioni.</strong> Ti inviamo per iscritto le informazioni del punto 3, con il prezzo complessivo, l'importo della caparra e il collegamento di pagamento corrispondente.</li>
-    <li><strong>Caparra di prenotazione.</strong> Per prenotare un cucciolo è richiesta una caparra, di norma pari al <strong>30% dell'importo complessivo</strong>, nell'importo indicato nella pagina di pagamento. La versi tramite i bottoni "Prenota" del sito o il collegamento che ti inviamo: il pagamento avviene su pagine sicure di <strong>Stripe</strong>. Nessun dato di pagamento transita sul nostro sito. La prenotazione è considerata valida solo dopo il versamento della caparra concordata.</li>
+    <li><strong>Caparra di prenotazione.</strong> Per prenotare un cucciolo è richiesta una caparra, nell'importo indicato nella pagina di pagamento. La versi tramite i bottoni "Prenota" del sito o il collegamento che ti inviamo: il pagamento avviene su pagine sicure di <strong>Stripe</strong>. Nessun dato di pagamento transita sul nostro sito. La prenotazione è considerata valida solo dopo il versamento della caparra concordata.</li>
     <li><strong>Conferma di prenotazione.</strong> Ricevuto il pagamento, ti confermiamo per iscritto la prenotazione del cucciolo: da quel momento il contratto è concluso e il cucciolo viene fermato per te.</li>
     <li><strong>Saldo finale.</strong> Il saldo va completato <strong>interamente prima della consegna</strong> del cucciolo, sia in caso di ritiro in sede sia di consegna a domicilio (punto 8). In caso di consegna a domicilio il pagamento è richiesto in anticipo.</li>
   </ol>
   <p>Utilizziamo solo modalità di pagamento sicure e tracciabili, a tutela di entrambe le parti: pagamento elettronico tramite Stripe, bonifico bancario o finanziamento con finanziaria convenzionata. <strong>Non accettiamo ricariche, contanti alla prenotazione, pagamenti anonimi o non verificabili.</strong></p>
-  <p>Il pagamento della caparra con il bottone "Prenota" effettuato senza la precedente conferma scritta delle condizioni (punto 2) viene considerato una richiesta di prenotazione: ti contattiamo entro 2 giorni lavorativi per confermare disponibilità e condizioni; se non potessimo confermare, la somma versata viene rimborsata integralmente.</p>
+  <p>Il pagamento della caparra con il bottone "Prenota" effettuato senza la precedente conferma scritta delle condizioni (punto 2) viene considerato una richiesta di prenotazione: ti contattiamo entro 2 giorni lavorativi per confermare disponibilità e condizioni.</p>
 
   <h2 id="requisiti">5. Requisiti per la prenotazione</h2>
   <p>Ai sensi dell'art. 4, comma 1, del D.Lgs. 529/1992 e della normativa sull'anagrafe degli animali d'affezione, al momento della prenotazione ti chiediamo:</p>
@@ -97,13 +97,8 @@
   <p>Questi dati sono necessari per la corretta registrazione del cucciolo, per il passaggio di proprietà e per la compilazione della documentazione fiscale. Vengono trattati secondo la nostra <a href="privacy.php">informativa privacy</a>. L'acquirente deve essere maggiorenne.</p>
 
   <h2 id="caparra">6. Caparra non rimborsabile e assenza di recesso</h2>
-  <p>Le somme versate tramite il bottone "Prenota" costituiscono <strong>caparra confirmatoria</strong> ai sensi dell'art. 1385 del Codice Civile e vengono imputate al prezzo complessivo del cucciolo. La prenotazione è un impegno reciproco: dal momento in cui versi la caparra, House of Dogs ferma il cucciolo per te, rinuncia ad altre richieste per lo stesso cucciolo e organizza visite veterinarie, documenti e consegna.</p>
+  <p>Le somme versate tramite il bottone "Prenota" costituiscono una <strong>caparra di prenotazione</strong> e vengono imputate al prezzo complessivo del cucciolo. La prenotazione è un impegno reciproco: dal momento in cui versi la caparra, House of Dogs ferma il cucciolo per te, rinuncia ad altre richieste per lo stesso cucciolo e organizza visite veterinarie, documenti e consegna.</p>
   <p class="warn">Una volta versata la caparra non è previsto alcun diritto di recesso e la caparra non è rimborsabile. In caso di rinuncia all'acquisto, per qualsiasi motivo, viene applicata una penale pari all'importo versato fino a quel momento.</p>
-  <ul>
-    <li>se House of Dogs non adempie per fatto proprio, ti restituisce il doppio della caparra;</li>
-    <li>se la consegna diventa impossibile per cause indipendenti dalle parti (punto 12), la caparra viene restituita integralmente, salvo che tu preferisca scegliere un altro cucciolo;</li>
-    <li>se House of Dogs non può confermare la prenotazione (punto 4), la somma versata viene rimborsata integralmente.</li>
-  </ul>
   <p>House of Dogs non riconosce alcun diritto di ripensamento convenzionale. Prima di versare la caparra ti invitiamo quindi a leggere con attenzione la conferma scritta delle condizioni e a chiederci qualsiasi chiarimento: rispondiamo a tutto, anche alle domande scomode. Restano in ogni caso fermi i diritti riconosciuti al consumatore da norme inderogabili di legge.</p>
 
   <h2 id="prezzi">7. Prezzi, IVA e costi aggiuntivi</h2>
@@ -151,7 +146,7 @@
   </ul>
 
   <h2 id="impossibilita">12. Se qualcosa impedisce la consegna</h2>
-  <p>Se prima della consegna il cucciolo prenotato dovesse ammalarsi, risultare non idoneo alla cessione o venire a mancare, te lo comunichiamo subito e puoi scegliere tra la restituzione integrale di quanto versato, entro 14 giorni, e la prenotazione di un altro cucciolo di pari valore, con conguaglio se necessario. Lo stesso vale per eventi di forza maggiore che rendano impossibile la consegna.</p>
+  <p>Se prima della consegna il cucciolo prenotato dovesse ammalarsi, risultare non idoneo alla cessione o venire a mancare, te lo comunichiamo subito e puoi scegliere tra la restituzione integrale di quanto versato <strong>(caparra esclusa)</strong>, entro 14 giorni, e la prenotazione di un altro cucciolo di pari valore, con conguaglio se necessario. Lo stesso vale per eventi di forza maggiore che rendano impossibile la consegna.</p>
 
   <h2 id="sito">13. Uso del sito e contenuti</h2>
   <p>I testi, le foto e il marchio presenti sul sito sono di House of Dogs e non possono essere copiati o riutilizzati senza autorizzazione scritta. Le foto dei cuccioli nelle schede delle razze sono reali; il video e le immagini di apertura sono contenuti generati digitalmente a scopo illustrativo. Le informazioni sul sito possono essere aggiornate in qualsiasi momento; la disponibilità dei cuccioli viene sempre confermata nel contatto diretto. Il sito presenta i cuccioli, raccoglie richieste di contatto e rimanda alle pagine di pagamento: le prenotazioni sono concluse secondo la procedura del punto 4.</p>
