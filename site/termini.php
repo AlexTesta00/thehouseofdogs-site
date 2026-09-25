@@ -58,6 +58,7 @@
       <li><a href="#prezzi">Prezzi, IVA e costi aggiuntivi</a></li>
       <li><a href="#saldo">Saldo finale e finanziamenti</a></li>
       <li><a href="#consegna">Consegna e documenti</a></li>
+      <li><a href="#termine">Termine di consegna</a></li>
       <li><a href="#garanzia">Garanzia legale e salute del cucciolo</a></li>
       <li><a href="#obblighi">Obblighi dell'acquirente</a></li>
       <li><a href="#impossibilita">Se qualcosa impedisce la consegna</a></li>
@@ -115,7 +116,10 @@
     <li>Il rischio di perimento del cucciolo passa a te con la consegna materiale. Se non fosse possibile effettuare la consegna nel giorno concordato per causa a te imputabile, concorderemo una nuova data; i costi documentati del secondo viaggio sono a tuo carico.</li>
   </ul>
 
-  <h2 id="garanzia">9. Garanzia legale e salute del cucciolo</h2>
+  <h2 id="termine">9. Termine di consegna</h2>
+  <p>Il cucciolo viene consegnato entro un <strong>termine massimo di 20 giorni, e non oltre, dalla data di completamento del saldo finale</strong>.</p>
+
+  <h2 id="garanzia">10. Garanzia legale e salute del cucciolo</h2>
   <p>Al cucciolo si applica la <strong>garanzia legale di conformità</strong> prevista dagli artt. 128-135 del Codice del Consumo, della durata di due anni dalla consegna, per i difetti esistenti al momento della consegna. Nel caso di un animale, per difetto di conformità si intendono in particolare patologie preesistenti alla consegna, accertate da un medico veterinario.</p>
   <ul>
     <li>Ti consigliamo di far visitare il cucciolo dal tuo veterinario di fiducia <strong>entro 7 giorni dalla consegna</strong>: è la verifica più utile per entrambi, e ti chiediamo di segnalarci subito qualsiasi rilievo.</li>
@@ -125,7 +129,7 @@
   </ul>
   <p>Per attivare la garanzia scrivici descrivendo il problema e allegando la documentazione veterinaria. Restiamo a disposizione, per tutta la vita del cane, per consigli su alimentazione, crescita e gestione.</p>
 
-  <h2 id="obblighi">10. Obblighi dell'acquirente</h2>
+  <h2 id="obblighi">11. Obblighi dell'acquirente</h2>
   <ul>
     <li>Essere maggiorenne e fornire dati veritieri e completi, compresi documento d'identità e codice fiscale (punto 4).</li>
     <li><strong>Il saldo va completato interamente prima della consegna</strong> del cucciolo.</li>
@@ -134,13 +138,13 @@
     <li>Non cedere il cucciolo a terzi nei primi mesi senza prima avvisarci: se per qualsiasi motivo non potessi più tenerlo, preferiamo aiutarti a trovare la soluzione migliore per lui.</li>
   </ul>
 
-  <h2 id="impossibilita">11. Se qualcosa impedisce la consegna</h2>
+  <h2 id="impossibilita">12. Se qualcosa impedisce la consegna</h2>
   <p>Se prima della consegna il cucciolo prenotato dovesse ammalarsi, risultare non idoneo alla cessione o venire a mancare, te lo comunichiamo subito e puoi scegliere tra la restituzione integrale di quanto versato <strong>(caparra esclusa)</strong>, entro 14 giorni, e la prenotazione di un altro cucciolo di pari valore, con conguaglio se necessario. Lo stesso vale per eventi di forza maggiore che rendano impossibile la consegna.</p>
 
-  <h2 id="sito">12. Uso del sito e contenuti</h2>
+  <h2 id="sito">13. Uso del sito e contenuti</h2>
   <p>I testi, le foto e il marchio presenti sul sito sono di House of Dogs e non possono essere copiati o riutilizzati senza autorizzazione scritta. Le foto dei cuccioli nelle schede delle razze sono reali; il video e le immagini di apertura sono contenuti generati digitalmente a scopo illustrativo. Le informazioni sul sito possono essere aggiornate in qualsiasi momento; la disponibilità dei cuccioli viene sempre confermata nel contatto diretto. Il sito presenta i cuccioli, raccoglie richieste di contatto e rimanda alle pagine di pagamento: le prenotazioni sono concluse secondo le presenti condizioni.</p>
 
-  <h2 id="legge">13. Legge applicabile, foro e controversie</h2>
+  <h2 id="legge">14. Legge applicabile, foro e controversie</h2>
   <p>Queste condizioni sono regolate dalla legge italiana. Per ogni controversia con un consumatore è competente il giudice del luogo di residenza o domicilio del consumatore, se situato in Italia (art. 66-bis del Codice del Consumo). Prima di rivolgersi al giudice, le parti si impegnano a cercare una soluzione amichevole; il consumatore può inoltre rivolgersi a un organismo di risoluzione alternativa delle controversie (ADR) ai sensi degli artt. 141 e seguenti del Codice del Consumo. Nulla in queste condizioni limita i diritti inderogabili riconosciuti al consumatore dalla legge.</p>
 
   <p class="mt-8 italic text-center font-medium" style="color:var(--text-secondary)">"Scegliere House of Dogs significa affidarsi a esperienza, trasparenza e amore per ciò che facciamo: accompagniamo ogni famiglia nel percorso di scelta e accoglienza del cucciolo perfetto."</p>
