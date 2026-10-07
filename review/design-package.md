@@ -67,7 +67,7 @@ sinistra (7), niente testo/loghi nel prompt (12).
 | 1 | 0.00-0.26 | soggiorno vuoto, luce dorata, camera parte | kicker: `HOUSE OF DOGS · DA 20 ANNI` / titolo: `C'e un posto in casa che aspetta solo lui.` | approach-from-depth (eco della camera che avanza) |
 | 2 | 0.30-0.55 | la camera attraversa la stanza, luce che scende | titolo: `Cuccioli toy italiani, selezionati con 20 anni di passione.` / sotto: `Sani, socializzati, con documenti veri.` | drift-down (eco della luce che scende) |
 | 3 | 0.58-0.80 | la poltrona entra in campo, il cucciolo si intuisce | titolo staccato (dispositivo di brand): `Barboncino. Maltipoo. Maltese. Bassotto.` / sotto: `Il tuo ti sta gia aspettando.` | grid snap-align (eco dei dettagli che vanno a fuoco) |
-| 4 settle | 0.84-1.00 | il finale a riposo: cucciolo che dorme sul plaid | titolo: `Portalo a casa.` / sotto: `Consegna a mano in tutta Italia, con microchip, libretto sanitario e pedigree.` / CTA: `Scrivici su WhatsApp` + `Scopri i cuccioli` | word-by-word rise a tappe (eco dell'arrivo) |
+| 4 settle | 0.84-1.00 | il finale a riposo: cucciolo che dorme sul plaid | titolo: `Portalo a casa.` / sotto: `Consegna a mano in tutta Italia, con microchip e libretto sanitario. Nessun pedigree ENCI: i cuccioli sono venduti come cani di tipo.` / CTA: `Scrivici su WhatsApp` + `Scopri i cuccioli` | word-by-word rise a tappe (eco dell'arrivo) |
 
 Scrim: banda 1 sa=.66, bande 2-3 sa=.62, settle sa=.70. Posizione testo: sinistra
 (--sx:32%), settle centrato in alto (--sx:50%). Audit worst-frame a 3.5:1 minimo.
@@ -117,7 +117,7 @@ Lede: `Sappiamo cosa si prova a cercare un cucciolo online: tante promesse, poca
 4 pilastri:
 1. `Cuccioli italiani, linee controllate` — `Selezioniamo cucciolate italiane da linee di sangue seguite nel tempo. Niente importazioni misteriose, niente cuccioli senza storia.`
 2. `Salute prima di tutto` — `Test genetici sui riproduttori e controlli veterinari sui cuccioli. Ti consegniamo un cucciolo visitato, vaccinato e sverminato.`
-3. `Documenti veri, sempre` — `Ogni cucciolo parte con microchip, libretto sanitario compilato dal veterinario e pedigree. Tutto nero su bianco.`
+3. `Documenti veri, sempre` — `Ogni cucciolo parte con microchip e libretto sanitario compilato dal veterinario. Tutto nero su bianco. Non viene rilasciato pedigree ENCI.`
 4. `Con te anche dopo` — `La consegna non e un addio: per dubbi, consigli e crescita, restiamo il tuo punto di riferimento per tutta la vita del cane.`
 
 ### 7d. #come-funziona — 4 passi (uccide l'ansia da truffa)
@@ -142,7 +142,7 @@ Reduced motion: risultato immediato senza animazioni.
 Titolo: `Le domande che ci fanno tutti. Giustamente.`
 1. `Come faccio a fidarmi? Il web e pieno di truffe sui cuccioli.` → `Hai ragione a essere prudente. Per questo non ti chiediamo mai di fidarti al buio: ti mostriamo i cuccioli in foto e video dal vivo prima di qualsiasi decisione, rispondiamo al telefono con nome e cognome e ogni consegna viaggia con documenti e accordi scritti. Siamo un'attivita registrata, con partita IVA visibile qui sotto, e in 20 anni abbiamo accompagnato centinaia di famiglie. Fai tutte le domande che vuoi: e il segno che sarai un ottimo proprietario.`
 2. `Il cucciolo restera davvero piccolo?` → `La taglia da adulto la scrive la genetica, non le promesse. Per questo selezioniamo linee toy seguite nel tempo e ti diciamo sempre peso e taglia dei genitori, con una stima onesta di come crescera. Un cucciolo va amato anche per il mezzo chilo in piu che potra avere da adulto.`
-3. `Che documenti ricevo con il cucciolo?` → `Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, pedigree del cucciolo e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui.`
+3. `Che documenti ricevo con il cucciolo?` → `Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui. Si dichiara esplicitamente che non viene rilasciato pedigree ENCI.`
 4. `A che eta consegnate i cuccioli?` → `Mai prima dei 60 giorni di vita, come prevede la legge italiana: e il tempo che serve a un cucciolo per crescere sereno accanto alla mamma. Alla consegna ha gia il primo ciclo vaccinale.`
 5. `Quanto costa un cucciolo toy?` → `Dipende dal tipo di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen), dal colore e dalla linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilita e prezzo, chiaro e completo di tutto quello che include. Niente costi a sorpresa dopo.`
 6. `Consegnate davvero in tutta Italia?` → `Si, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno e modalita di consegna.`
