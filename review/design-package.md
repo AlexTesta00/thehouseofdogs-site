@@ -88,11 +88,11 @@ Tutte le sezioni incanalano verso UNA call to action: WhatsApp (ancora #contatti
 4 voci mono, essenziali:
 `20 anni di selezione` · `Consegna a mano in tutta Italia` · `Microchip e libretto sanitario` · `Assistenza per tutta la vita`
 
-### 7b. #cuccioli — Le razze (H1 SEO della pagina)
+### 7b. #cuccioli — I tipi di cucciolo (H1 SEO della pagina)
 H1: `Cuccioli toy in vendita: Barboncino, Maltipoo, Maltese e Bassotto Kaninchen`
-Lede: `Quattro razze, una promessa sola: taglia mini, carattere equilibrato e una crescita seguita giorno per giorno, da quando nascono a quando ti guardano per la prima volta.`
+Lede: `Quattro tipi di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen), una promessa sola: taglia mini, carattere equilibrato e una crescita seguita giorno per giorno, da quando nascono a quando ti guardano per la prima volta.`
 
-Card razza (foto reali). Ogni card: nome, anima in una riga, 3 tag, CTA WhatsApp.
+Card tipo di cucciolo (foto reali). Ogni card: nome, anima in una riga, 3 tag, CTA WhatsApp.
 
 1. **Barboncino Toy** — `Intelligente da vendere, non perde pelo, ama imparare.`
    tag: `non perde pelo` `super intelligente` `red e albicocca`
@@ -107,7 +107,7 @@ Card razza (foto reali). Ogni card: nome, anima in una riga, 3 tag, CTA WhatsApp
    tag: `taglia kaninchen` `giocherellone` `anche arlecchino`
    micro: `Il piu piccolo dei bassotti: curioso, buffo, incollato a te.`
 
-CTA card: `Chiedi disponibilita` (link wa.me con testo precompilato per razza).
+CTA card: `Chiedi disponibilita` (link wa.me con testo precompilato per tipo di cucciolo).
 
 ### 7c. #perche-noi — sezione scura, fiducia (usa il frame finale come immagine)
 Kicker: `PERCHE HOUSE OF DOGS`
@@ -123,7 +123,7 @@ Lede: `Sappiamo cosa si prova a cercare un cucciolo online: tante promesse, poca
 ### 7d. #come-funziona — 4 passi (uccide l'ansia da truffa)
 Kicker: `COME FUNZIONA`
 Titolo: `Dal primo messaggio alla tua porta, senza sorprese.`
-1. `Scrivici` — `Un messaggio su WhatsApp basta. Dicci che razza ami e che casa lo aspetta.`
+1. `Scrivici` — `Un messaggio su WhatsApp basta. Dicci che tipo di cucciolo ami (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) e che casa lo aspetta.`
 2. `Guarda i cuccioli dal vivo` — `Ti mandiamo foto e video reali dei cuccioli disponibili. Vedi come sono, non come sembrano.`
 3. `Prenota il tuo` — `Scelto il cucciolo, lo fermiamo per te e concordiamo tutto con calma, per iscritto.`
 4. `Aprigli la porta` — `Consegna a mano in tutta Italia, mai prima dei 60 giorni di vita, con tutti i documenti al seguito.`
@@ -135,7 +135,7 @@ Titolo: `Tre domande e ti diciamo chi fa per te.`
 D1 `Con chi vivra?` → `Bambini e famiglia` / `In coppia` / `Con me, e la mia ombra`
 D2 `Quanto conta il pelo in giro per casa?` → `Zero pelo, per favore` / `Non mi preoccupa`
 D3 `Che carattere cerchi?` → `Vivace e giocherellone` / `Dolce e tranquillo` / `Piccolo peperino`
-Risultato: card razza + `E lui. Vuoi vederlo dal vivo in video?` + CTA WhatsApp precompilata.
+Risultato: card tipo di cucciolo + `E lui. Vuoi vederlo dal vivo in video?` + CTA WhatsApp precompilata.
 Reduced motion: risultato immediato senza animazioni.
 
 ### 7f. #domande — FAQ (obiezioni reali dalla ricerca)
@@ -144,16 +144,16 @@ Titolo: `Le domande che ci fanno tutti. Giustamente.`
 2. `Il cucciolo restera davvero piccolo?` → `La taglia da adulto la scrive la genetica, non le promesse. Per questo selezioniamo linee toy seguite nel tempo e ti diciamo sempre peso e taglia dei genitori, con una stima onesta di come crescera. Un cucciolo va amato anche per il mezzo chilo in piu che potra avere da adulto.`
 3. `Che documenti ricevo con il cucciolo?` → `Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, pedigree del cucciolo e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui.`
 4. `A che eta consegnate i cuccioli?` → `Mai prima dei 60 giorni di vita, come prevede la legge italiana: e il tempo che serve a un cucciolo per crescere sereno accanto alla mamma. Alla consegna ha gia il primo ciclo vaccinale.`
-5. `Quanto costa un cucciolo toy?` → `Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilita e prezzo, chiaro e completo di tutto quello che include. Niente costi a sorpresa dopo.`
+5. `Quanto costa un cucciolo toy?` → `Dipende dal tipo di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen), dal colore e dalla linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilita e prezzo, chiaro e completo di tutto quello che include. Niente costi a sorpresa dopo.`
 6. `Consegnate davvero in tutta Italia?` → `Si, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno e modalita di consegna.`
-7. `Barboncino e Maltipoo perdono pelo?` → `Pochissimo: sono tra le razze con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane e ipoallergenico al cento per cento, ma qui siamo molto vicini.`
-8. `La taglia toy e riconosciuta ufficialmente?` → `Dipende dalla razza: il Barboncino Toy e una varieta riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia piu piccola, non una categoria ufficiale. Te lo diciamo chiaramente perche e cosi che vogliamo lavorare: parole oneste, cuccioli veri.`
+7. `Barboncino e Maltipoo perdono pelo?` → `Pochissimo: sono tra i tipi di cane con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane e ipoallergenico al cento per cento, ma qui siamo molto vicini.`
+8. `La taglia toy e riconosciuta ufficialmente?` → `Dipende dal tipo: il Barboncino Toy e una varieta riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia piu piccola, non una categoria ufficiale. Te lo diciamo chiaramente perche e cosi che vogliamo lavorare: parole oneste, cuccioli veri.`
 
 ### 7g. #contatti — prenotazione
 Kicker: `PRENOTA IL TUO CUCCIOLO`
 Titolo: `Raccontaci chi stai cercando.`
 Lede: `Rispondiamo in giornata con disponibilita, foto e video reali. Se preferisci fare prima, WhatsApp e la via piu rapida.`
-Form: NOME* / TELEFONO / EMAIL / RAZZA (select: le 4 + `Non so ancora`) / MESSAGGIO /
+Form: NOME* / TELEFONO / EMAIL / TIPO DI CUCCIOLO (select: le 4 + `Non so ancora`) / MESSAGGIO /
 checkbox: `Ho letto l'informativa privacy e acconsento al trattamento dei dati per essere ricontattato.`
 Bottone: `Invia la richiesta`
 Placeholder messaggio: `Es. Cerco una femmina di Barboncino Toy albicocca, siamo una famiglia con due bambini...`
@@ -162,8 +162,8 @@ Colonna contatti: WhatsApp `+39 377 087 6017` (CTA primaria), telefono, email `h
 
 ### 7h. Footer
 Brand + una riga: `Da 20 anni, cuccioli toy selezionati con passione, dalla nostra famiglia alla tua.`
-Colonne: Razze (ancore) / Contatti / Legale (Privacy, P.IVA 03933680401, PEC casadipluto@pec.buffetti.it).
-Nota AI (scelta dall'utente): `I visual di apertura sono generati digitalmente. I cuccioli nelle foto delle razze sono reali.`
+Colonne: Tipi di cucciolo (ancore) / Contatti / Legale (Privacy, P.IVA 03933680401, PEC casadipluto@pec.buffetti.it).
+Nota AI (scelta dall'utente): `I visual di apertura sono generati digitalmente. I cuccioli nelle foto dei tipi sono reali.`
 Copyright: `© 2026 House of Dogs. Tutti i diritti riservati.`
 
 ## 8. Il piano del layer vettoriale
@@ -194,7 +194,7 @@ target touch 44px, un solo layer ambiente fisso, entrate con stagger ritirato.
 - meta description: `Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen: cuccioli selezionati, sani e socializzati. Consegna in tutta Italia. Prenota il tuo cucciolo.`
 - H1 unico nella sezione #cuccioli (keyword transazionale), hero con testo non-heading + span sr-only.
 - JSON-LD: LocalBusiness (name, url, telephone, email, vatID, areaServed IT, logo),
-  FAQPage (le 8 FAQ visibili), ItemList delle 4 razze. NIENTE Product/Offer con
+  FAQPage (le 8 FAQ visibili), ItemList dei 4 tipi di cucciolo. NIENTE Product/Offer con
   prezzo (animali vivi), NIENTE rating auto-prodotti.
 - OG/Twitter con URL assoluti su https://www.thehouseofdogs.it/ (dominio noto).
 - sitemap.xml + robots.txt. Immagini: file rinominati con keyword, alt descrittivi,
