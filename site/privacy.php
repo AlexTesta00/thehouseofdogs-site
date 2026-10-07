@@ -78,7 +78,7 @@
   <h3>a) Dati di navigazione</h3>
   <p>I sistemi informatici che fanno funzionare il sito raccolgono, nel normale esercizio, alcuni dati la cui trasmissione è implicita nell'uso di Internet: indirizzo IP, tipo di browser e sistema operativo, pagina richiesta, data e ora, dimensione della risposta. Sono dati tecnici, conservati dal fornitore di hosting nei log del server per motivi di sicurezza e per rilevare eventuali abusi, e non vengono associati a persone identificate se non in caso di accertamento di responsabilità per reati informatici.</p>
   <h3>b) Dati che ci fornisci con il modulo di contatto</h3>
-  <p>Nome, telefono, email, razza di interesse e contenuto del messaggio. Il modulo contiene un campo nascosto anti-spam (honeypot) che non raccoglie dati delle persone.</p>
+  <p>Nome, telefono, email, tipo di cucciolo di interesse e contenuto del messaggio. Il modulo contiene un campo nascosto anti-spam (honeypot) che non raccoglie dati delle persone.</p>
   <h3>c) Dati di contatto via WhatsApp, telefono ed email</h3>
   <p>Se ci scrivi su WhatsApp, ci chiami o ci mandi un'email, trattiamo il tuo numero o indirizzo e il contenuto della conversazione, incluse foto e video che ci invii.</p>
   <h3>d) Dati relativi al pagamento</h3>

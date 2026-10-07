@@ -95,12 +95,12 @@ $formErrore  = isset($_GET['errore']);
     "mainEntity": [
       { "@type": "Question", "name": "Come faccio a fidarmi? Il web è pieno di truffe sui cuccioli.", "acceptedAnswer": { "@type": "Answer", "text": "Hai ragione a essere prudente. Per questo non ti chiediamo mai di fidarti al buio: ti mostriamo i cuccioli in foto e video dal vivo prima di qualsiasi decisione, rispondiamo al telefono con nome e cognome e ogni consegna viaggia con documenti e accordi scritti. Siamo un'attività registrata, con partita IVA visibile sul sito, e in 20 anni abbiamo accompagnato centinaia di famiglie." } },
       { "@type": "Question", "name": "Il cucciolo resterà davvero piccolo?", "acceptedAnswer": { "@type": "Answer", "text": "La taglia da adulto la scrive la genetica, non le promesse. Per questo selezioniamo linee toy seguite nel tempo e ti diciamo sempre peso e taglia dei genitori, con una stima onesta di come crescerà." } },
-      { "@type": "Question", "name": "Che documenti ricevo con il cucciolo?", "acceptedAnswer": { "@type": "Answer", "text": "Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di razza in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui. Si dichiara esplicitamente che non viene rilasciato pedigree ENCI." } },
+      { "@type": "Question", "name": "Che documenti ricevo con il cucciolo?", "acceptedAnswer": { "@type": "Answer", "text": "Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di tipo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui. Si dichiara esplicitamente che non viene rilasciato pedigree ENCI." } },
       { "@type": "Question", "name": "A che età consegnate i cuccioli?", "acceptedAnswer": { "@type": "Answer", "text": "Mai prima dei 60 giorni di vita, come prevede la legge italiana: è il tempo che serve a un cucciolo per crescere sereno accanto alla mamma. Alla consegna ha già il primo ciclo vaccinale." } },
-      { "@type": "Question", "name": "Quanto costa un cucciolo toy?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo." } },
+      { "@type": "Question", "name": "Quanto costa un cucciolo toy?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende dal tipo di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen), dal colore e dalla linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo." } },
       { "@type": "Question", "name": "Consegnate davvero in tutta Italia?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, e lo facciamo a mano: il cucciolo viaggia accompagnato, non in un pacco. Concordiamo insieme giorno, modalità e rimborso delle spese di viaggio, sempre prima della prenotazione." } },
-      { "@type": "Question", "name": "Barboncino e Maltipoo perdono pelo?", "acceptedAnswer": { "@type": "Answer", "text": "Pochissimo: sono tra le razze con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane è ipoallergenico al cento per cento, ma qui siamo molto vicini." } },
-      { "@type": "Question", "name": "La taglia toy è riconosciuta ufficialmente?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende dalla razza: il Barboncino Toy è una varietà riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia più piccola, non una categoria ufficiale. Te lo diciamo chiaramente perché è così che vogliamo lavorare: parole oneste, cuccioli veri." } }
+      { "@type": "Question", "name": "Barboncino e Maltipoo perdono pelo?", "acceptedAnswer": { "@type": "Answer", "text": "Pochissimo: sono tra i tipi di cane con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane è ipoallergenico al cento per cento, ma qui siamo molto vicini." } },
+      { "@type": "Question", "name": "La taglia toy è riconosciuta ufficialmente?", "acceptedAnswer": { "@type": "Answer", "text": "Dipende dal tipo: il Barboncino Toy è una varietà riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia più piccola, non una categoria ufficiale. Te lo diciamo chiaramente perché è così che vogliamo lavorare: parole oneste, cuccioli veri." } }
     ]
   }
   </script>
@@ -182,7 +182,7 @@ $formErrore  = isset($_GET['errore']);
       </div>
     </div>
 
-    <!-- banda 3: le razze, staccato -->
+    <!-- banda 3: i tipi di cucciolo, staccato -->
     <div class="band" data-a="0.555" data-b="0.825" data-spread="0.4" style="--sx:32%;--sa:.62">
       <div class="band-inner mx-auto max-w-6xl px-6">
         <div class="max-w-2xl split">
@@ -205,7 +205,7 @@ $formErrore  = isset($_GET['errore']);
           <span class="sr-only">Portalo a casa.</span>
           <span aria-hidden="true" data-split-rise>Portalo a casa.</span>
         </p>
-        <p class="settle-sub mt-5 text-lg lg:text-xl text-cream/90 max-w-xl mx-auto">Consegna a mano in tutta Italia, con microchip, libretto sanitario e certificato di razza in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente).</p>
+        <p class="settle-sub mt-5 text-lg lg:text-xl text-cream/90 max-w-xl mx-auto">Consegna a mano in tutta Italia, con microchip, libretto sanitario e certificato di tipo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente).</p>
         <div class="settle-cta mt-8 flex flex-wrap items-center justify-center gap-3">
           <a href="https://wa.me/393770876017?text=Ciao!%20Ho%20visto%20il%20sito%20e%20vorrei%20informazioni%20sui%20cuccioli%20disponibili." target="_blank" rel="noopener" class="btn btn-wa rounded-full px-6 py-3 font-semibold">Scrivici su WhatsApp</a>
           <a href="#cuccioli" class="btn btn-ghost rounded-full px-6 py-3 font-semibold">Scopri i cuccioli</a>
@@ -252,9 +252,9 @@ $formErrore  = isset($_GET['errore']);
   <section id="cuccioli" class="bg-canvas py-20 md:py-28 relative">
     <div class="mx-auto max-w-6xl px-6">
       <div class="reveal max-w-3xl">
-        <p class="part font-monolabel text-xs text-accent mb-4">LE NOSTRE RAZZE</p>
+        <p class="part font-monolabel text-xs text-accent mb-4">I NOSTRI CUCCIOLI</p>
         <h1 class="part font-display text-3xl md:text-5xl leading-tight text-ink">Cuccioli toy in vendita: Barboncino, Maltipoo, Maltese e Bassotto Kaninchen</h1>
-        <p class="part mt-5 text-lg text-inksoft max-w-2xl">Quattro razze, una promessa sola: taglia mini, carattere equilibrato e una crescita seguita giorno per giorno, da quando nascono a quando ti guardano per la prima volta.</p>
+        <p class="part mt-5 text-lg text-inksoft max-w-2xl">Quattro tipi di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy e Bassotto Kaninchen), una promessa sola: taglia mini, carattere equilibrato e una crescita seguita giorno per giorno, da quando nascono a quando ti guardano per la prima volta.</p>
       </div>
 
       <div class="mt-12 grid gap-6 md:grid-cols-2 reveal">
@@ -379,7 +379,7 @@ $formErrore  = isset($_GET['errore']);
         <li class="part bg-deeppanel rounded-2xl p-6 md:p-7 border border-white/5">
           <p class="font-monolabel text-[10px] text-accent mb-2">03</p>
           <h3 class="font-display text-xl">Documenti veri, sempre</h3>
-          <p class="mt-2 text-creamsoft">Ogni cucciolo parte con microchip e libretto sanitario compilato dal veterinario; su richiesta, certificato di razza in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente). Tutto nero su bianco.</p>
+          <p class="mt-2 text-creamsoft">Ogni cucciolo parte con microchip e libretto sanitario compilato dal veterinario; su richiesta, certificato di tipo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente). Tutto nero su bianco.</p>
         </li>
         <li class="part bg-deeppanel rounded-2xl p-6 md:p-7 border border-white/5">
           <p class="font-monolabel text-[10px] text-accent mb-2">04</p>
@@ -409,7 +409,7 @@ $formErrore  = isset($_GET['errore']);
             <div class="part md:text-right md:pr-8">
               <p class="font-monolabel text-[10px] text-accent mb-2 flex items-center gap-2 md:justify-end"><span class="paw-step" aria-hidden="true">🐾</span>PASSO 1</p>
               <h3 class="font-display text-2xl text-ink">Scrivici</h3>
-              <p class="mt-2 text-inksoft">Un messaggio su WhatsApp basta. Dicci che razza ami e che casa lo aspetta.</p>
+              <p class="mt-2 text-inksoft">Un messaggio su WhatsApp basta. Dicci che tipo di cucciolo ami (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) e che casa lo aspetta.</p>
             </div><div aria-hidden="true"></div>
           </li>
           <li class="step-item reveal md:grid md:grid-cols-2 md:gap-10 items-center pl-14 md:pl-0">
@@ -517,7 +517,7 @@ $formErrore  = isset($_GET['errore']);
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Che documenti ricevo con il cucciolo?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di razza in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui. <strong>Si dichiara esplicitamente che non viene rilasciato pedigree ENCI.</strong></p>
+          <p class="mt-3 text-inksoft">Microchip registrato, libretto sanitario compilato dal veterinario con vaccinazioni e sverminazioni, certificato di tipo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen) in prima origine (si specifica che la richiesta deve essere fatta dal cliente e che eventuali costi saranno a carico del cliente) e accordo di vendita scritto. Tutto ti viene consegnato insieme a lui. <strong>Si dichiara esplicitamente che non viene rilasciato pedigree ENCI.</strong></p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>A che età consegnate i cuccioli?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
@@ -525,7 +525,7 @@ $formErrore  = isset($_GET['errore']);
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Quanto costa un cucciolo toy?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Dipende da razza, colore e linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo.</p>
+          <p class="mt-3 text-inksoft">Dipende dal tipo di cucciolo (Barboncino Toy, Maltipoo, Maltese Toy o Bassotto Kaninchen), dal colore e dalla linea di sangue. Scrivici su WhatsApp: ti diciamo subito disponibilità e prezzo, chiaro e completo di tutto quello che include. Si prenota con una caparra e il saldo si può pagare anche a rate con finanziamento, previa approvazione. Niente costi a sorpresa dopo.</p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Consegnate davvero in tutta Italia?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
@@ -533,11 +533,11 @@ $formErrore  = isset($_GET['errore']);
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>Barboncino e Maltipoo perdono pelo?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Pochissimo: sono tra le razze con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane è ipoallergenico al cento per cento, ma qui siamo molto vicini.</p>
+          <p class="mt-3 text-inksoft">Pochissimo: sono tra i tipi di cane con la minor dispersione di pelo, per questo sono amatissime in appartamento. Nessun cane è ipoallergenico al cento per cento, ma qui siamo molto vicini.</p>
         </details>
         <details class="part faq-item py-5">
           <summary class="faq-q flex items-start justify-between gap-4 font-semibold text-ink text-lg"><span>La taglia toy è riconosciuta ufficialmente?</span><span class="faq-chev text-accent shrink-0 mt-1" aria-hidden="true">+</span></summary>
-          <p class="mt-3 text-inksoft">Dipende dalla razza: il Barboncino Toy è una varietà riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia più piccola, non una categoria ufficiale. Te lo diciamo chiaramente perché è così che vogliamo lavorare: parole oneste, cuccioli veri.</p>
+          <p class="mt-3 text-inksoft">Dipende dal tipo: il Barboncino Toy è una varietà riconosciuta, mentre per il Maltese la parola toy indica la selezione di taglia più piccola, non una categoria ufficiale. Te lo diciamo chiaramente perché è così che vogliamo lavorare: parole oneste, cuccioli veri.</p>
         </details>
       </div>
     </div>
@@ -602,7 +602,7 @@ $formErrore  = isset($_GET['errore']);
             </div>
           </div>
           <div>
-            <label for="f-razza" class="font-monolabel text-[10px] text-creamsoft block mb-1.5">RAZZA</label>
+            <label for="f-razza" class="font-monolabel text-[10px] text-creamsoft block mb-1.5">TIPO DI CUCCIOLO</label>
             <select id="f-razza" name="razza" class="field w-full rounded-xl px-4 py-3 text-ink">
               <option>Non so ancora</option>
               <option>Barboncino Toy</option>
@@ -638,10 +638,10 @@ $formErrore  = isset($_GET['errore']);
         <span class="font-display text-lg">House of Dogs</span>
       </div>
       <p class="mt-4 max-w-sm text-sm">Da 20 anni, cuccioli toy selezionati con passione, dalla nostra famiglia alla tua.</p>
-      <p class="mt-6 text-xs opacity-70">I visual di apertura sono generati digitalmente. I cuccioli nelle foto delle razze sono reali.</p>
+      <p class="mt-6 text-xs opacity-70">I visual di apertura sono generati digitalmente. I cuccioli nelle foto dei tipi sono reali.</p>
     </div>
-    <nav aria-label="Razze" class="text-sm">
-      <p class="font-monolabel text-[10px] text-accent mb-4">RAZZE</p>
+    <nav aria-label="Tipi di cucciolo" class="text-sm">
+      <p class="font-monolabel text-[10px] text-accent mb-4">TIPI DI CUCCIOLO</p>
       <ul class="grid gap-2.5">
         <li><a class="hover:text-cream transition-colors" href="#barboncino-toy">Barboncino Toy</a></li>
         <li><a class="hover:text-cream transition-colors" href="#maltipoo-toy">Maltipoo Toy</a></li>

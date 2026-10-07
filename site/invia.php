@@ -71,7 +71,7 @@ $corpo = "Nuova richiesta dal sito thehouseofdog.it\n\n"
        . "Nome: {$nome}\n"
        . "Telefono: " . ($telefono !== '' ? $telefono : 'non indicato') . "\n"
        . "Email: " . ($email !== '' ? $email : 'non indicata') . "\n"
-       . "Razza di interesse: {$razza}\n\n"
+       . "Tipo di cucciolo di interesse: {$razza}\n\n"
        . "Messaggio:\n" . ($messaggio !== '' ? $messaggio : '(nessun messaggio)') . "\n\n"
        . "Inviato il: " . date('d/m/Y H:i') . "\n"
        . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'sconosciuto') . "\n";
