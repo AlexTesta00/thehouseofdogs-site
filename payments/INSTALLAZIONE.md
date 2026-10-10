@@ -145,7 +145,7 @@ php -S 127.0.0.1:8124 -t payments/public
 
 Apri <http://127.0.0.1:8124/>. Senza chiave Mollie sei in modalità demo.
 
-Su Windows con il PHP installato da WinGet (nessun `php.ini` attivo) le estensioni vanno passate esplicitamente; nel progetto è già pronta la configurazione `payments` in `.claude/launch.json`, equivalente a:
+Su Windows con il PHP installato da WinGet (nessun `php.ini` attivo) manca anche il pacchetto certificati CA per cURL: il client Mollie usa allora l'archivio certificati di Windows, con verifica sempre attiva (errore cURL 60 altrimenti). Le estensioni vanno passate esplicitamente; nel progetto è già pronta la configurazione `payments` in `.claude/launch.json`, equivalente a:
 
 ```bash
 php -n -d extension_dir="<cartella php>\ext" -d extension=curl -d extension=openssl -d extension=pdo_sqlite -d extension=mbstring -S 127.0.0.1:8124 -t payments/public

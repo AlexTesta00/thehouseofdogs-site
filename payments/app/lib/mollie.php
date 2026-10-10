@@ -99,13 +99,19 @@ final class HodpayMollieClient implements HodpayMollieApi
         if ($json !== null) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         }
+        /* Windows senza php.ini: nessun pacchetto CA configurato. Si usa l'archivio certificati
+           di sistema, mantenendo la verifica attiva. Su Linux vale il bundle di sistema. */
+        if (PHP_OS_FAMILY === 'Windows' && (string)ini_get('curl.cainfo') === '' && defined('CURLSSLOPT_NATIVE_CA')) {
+            curl_setopt($ch, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA);
+        }
         $raw = curl_exec($ch);
         $errno = curl_errno($ch);
+        $errstr = curl_error($ch);
         $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
 
         if ($raw === false || $errno !== 0) {
-            error_log("[hodpay] Mollie {$method} {$path}: errore di rete cURL #{$errno}");
+            error_log("[hodpay] Mollie {$method} {$path}: errore di rete cURL #{$errno} {$errstr}");
             throw new HodpayMollieException('Impossibile contattare Mollie. Riprova tra qualche istante.', 0, null, null, true);
         }
         $decoded = json_decode((string)$raw, true);
