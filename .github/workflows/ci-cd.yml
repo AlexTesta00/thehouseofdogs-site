@@ -1,5 +1,6 @@
 # CI/CD House of Dogs
-# A ogni push su main: controlla la sintassi PHP e carica la cartella site/ su Hostinger via FTP.
+# A ogni push su main: controlla la sintassi PHP, esegue i test dell'app pagamenti e carica via FTP su Hostinger
+# la cartella site/ (document root) e l'app pagamenti (payments/public -> payments/, parte privata -> payments-private/).
 #
 # Segreti da creare su GitHub (Settings > Secrets and variables > Actions > New repository secret):
 #   FTP_SERVER    -> host FTP di Hostinger (hPanel > Siti web > Gestisci > File > Account FTP, es. ftp.tuodominio.it o un IP)
@@ -10,6 +11,10 @@
 #                     L'account FTP di Hostinger e' gia' radicato dentro public_html (verificato il 2026-08-23:
 #                     con ./public_html/ i file finivano in public_html/public_html/). Impostare la variabile
 #                     solo se l'account FTP dovesse cambiare radice.
+#   PAYMENTS_BASE_URL -> URL pubblico dell'app pagamenti. Default: https://www.thehouseofdog.it/payments
+# Segreto per l'app pagamenti:
+#   PAYMENTS_MOLLIE_API_KEY -> chiave API Mollie (test_... o live_...). Il deploy genera config.php sul server da questo
+#                              segreto; la chiave non passa mai dal repository.
 
 name: Deploy su Hostinger
 
@@ -39,7 +44,10 @@ jobs:
       - name: Lint di tutti i file PHP
         run: |
           set -e
-          find site -name '*.php' -print0 | xargs -0 -n1 php -l
+          find site payments -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Test automatici app pagamenti
+        run: php payments/tools/selftest.php --http
 
       - name: Controllo asset essenziali
         run: |
@@ -74,5 +82,77 @@ jobs:
             **/.git*
             **/.git*/**
             **/.ht_richieste.log
+            **/Thumbs.db
+            **/.DS_Store
+
+      # ---- App pagamenti (payments/) ----
+      # Parte pubblica  -> public_html/payments/          (https://www.thehouseofdog.it/payments/)
+      # Parte privata   -> public_html/payments-private/  (bloccata dal web dai .htaccess; app-path.php la trova da sola)
+      # La chiave Mollie arriva dal segreto PAYMENTS_MOLLIE_API_KEY: config.php viene generato qui e mai committato.
+      # Senza segreto, config.php non viene scritto e un eventuale file caricato a mano sul server resta intatto.
+      - name: Prepara cartella privata pagamenti
+        env:
+          PAYMENTS_MOLLIE_API_KEY: ${{ secrets.PAYMENTS_MOLLIE_API_KEY }}
+          PAYMENTS_BASE_URL: ${{ vars.PAYMENTS_BASE_URL || 'https://www.thehouseofdog.it/payments' }}
+        run: |
+          set -e
+          mkdir -p deploy-private
+          cp -r payments/app payments/config payments/data deploy-private/
+          rm -f deploy-private/config/config.php
+          if [ -n "$PAYMENTS_MOLLIE_API_KEY" ]; then
+            php -r '
+              $key = getenv("PAYMENTS_MOLLIE_API_KEY");
+              if (!preg_match("/^(test|live)_[A-Za-z0-9]{20,}$/", $key)) { fwrite(STDERR, "PAYMENTS_MOLLIE_API_KEY non ha il formato atteso (test_... o live_...)\n"); exit(1); }
+              $cfg = [
+                "mollie_api_key" => $key,
+                "require_admin_login" => false,
+                "merchant_name" => "The House Of Dog",
+                "purchase_description" => "Caparra cucciolo - The House Of Dog",
+                "base_url" => rtrim(getenv("PAYMENTS_BASE_URL"), "/"),
+              ];
+              file_put_contents("deploy-private/config/config.php", "<?php\n/* Generato dal deploy GitHub: non modificare a mano, cambia i segreti del repository. */\nreturn " . var_export($cfg, true) . ";\n");
+            '
+            echo "config.php generato (modalità: $(echo "$PAYMENTS_MOLLIE_API_KEY" | cut -c1-4)...)"
+          else
+            echo "Segreto PAYMENTS_MOLLIE_API_KEY assente: config.php non generato (modalità demo o file caricato a mano)."
+          fi
+
+      - name: Carica payments/public su Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./payments/public/
+          server-dir: ${{ vars.FTP_SERVER_DIR || './' }}payments/
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 120000
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/Thumbs.db
+            **/.DS_Store
+
+      - name: Carica parte privata pagamenti su Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./deploy-private/
+          server-dir: ${{ vars.FTP_SERVER_DIR || './' }}payments-private/
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 120000
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/data/*.sqlite*
+            **/data/*.log
             **/Thumbs.db
             **/.DS_Store

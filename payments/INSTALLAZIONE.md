@@ -64,9 +64,21 @@ Per verificare le estensioni sul server: crea un file temporaneo `info.php` con 
 
 Se l'hosting non consente cartelle fuori dalla document root, carica l'intera cartella `payments/` in `public_html/payments/` così com'è e lascia `app-path.php` invariato. In questo caso l'URL pubblico diventa `https://dominio.it/payments/public/`. I `.htaccess` nelle cartelle private rispondono 403 a qualunque richiesta diretta: verifica aprendo `https://dominio.it/payments/config/config.php` (deve dare **403 Forbidden**).
 
-### Nota sul deploy automatico del sito
+### Deploy automatico da GitHub (configurato)
 
-Il workflow GitHub `.github/workflows/ci-cd.yml` carica via FTP **solo** la cartella `site/`. La cartella `payments/` non viene pubblicata automaticamente: il caricamento è manuale (o va aggiunto al workflow quando si decide di andare online).
+Il workflow `.github/workflows/ci-cd.yml`, a ogni push su `main`, esegue lint e test e carica via FTP:
+
+| Da | A (dentro `public_html`) | URL |
+|---|---|---|
+| `site/` | `./` | https://www.thehouseofdog.it/ |
+| `payments/public/` | `payments/` | https://www.thehouseofdog.it/payments/ |
+| `payments/app`, `config`, `data` | `payments-private/` | bloccata dal web (`.htaccess`) |
+
+`app-path.php` trova da solo la cartella `payments-private` accanto a `payments`: nessuna modifica manuale.
+
+**Chiave Mollie in produzione.** Su GitHub → Settings → Secrets and variables → Actions → New repository secret, crea `PAYMENTS_MOLLIE_API_KEY` con la chiave (`test_…` o `live_…`). Al deploy successivo il workflow genera `payments-private/config/config.php` sul server con quella chiave, `base_url` = `https://www.thehouseofdog.it/payments` e pannello senza login. La chiave non entra mai nel repository né nei log (il workflow stampa solo il prefisso `test`/`live`). Per cambiare chiave basta aggiornare il segreto e rilanciare il workflow (Actions → Deploy su Hostinger → Run workflow). Senza segreto, `config.php` non viene scritto: l'app resta in demo oppure usa un `config.php` caricato a mano via File Manager.
+
+Il database `payments.sqlite` e i log sul server non vengono mai toccati dal deploy.
 
 ---
 
