@@ -4,8 +4,35 @@
     {
       "name": "houseofdogs",
       "runtimeExecutable": "C:\\Users\\alext\\AppData\\Local\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\\php.exe",
-      "runtimeArgs": ["-S", "127.0.0.1:8123", "-t", "site"],
+      "runtimeArgs": [
+        "-S",
+        "127.0.0.1:8123",
+        "-t",
+        "site"
+      ],
       "port": 8123
+    },
+    {
+      "name": "payments",
+      "runtimeExecutable": "C:\\Users\\alext\\AppData\\Local\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\\php.exe",
+      "runtimeArgs": [
+        "-n",
+        "-d",
+        "extension_dir=C:\\Users\\alext\\AppData\\Local\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\\ext",
+        "-d",
+        "extension=curl",
+        "-d",
+        "extension=openssl",
+        "-d",
+        "extension=pdo_sqlite",
+        "-d",
+        "extension=mbstring",
+        "-S",
+        "127.0.0.1:8124",
+        "-t",
+        "payments/public"
+      ],
+      "port": 8124
     }
   ]
 }

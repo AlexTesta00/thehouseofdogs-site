@@ -11,3 +11,10 @@ review/old-home.html
 # Sistema
 .DS_Store
 Thumbs.db
+
+# App pagamenti (payments/): configurazione con chiave Mollie, database, archivi
+payments/config/config.php
+payments/data/*
+!payments/data/.gitignore
+!payments/data/.htaccess
+payments/dist/

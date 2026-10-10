@@ -1,0 +1,24 @@
+# Cartella pubblica dell'app pagamenti
+Options -Indexes
+
+# Nessun file nascosto o di backup servito dal web
+<FilesMatch "^\.|~$|\.(bak|old|orig|sqlite|log)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Per forzare HTTPS in produzione, togli il commento alle tre righe seguenti
+# (su Hostinger è più semplice attivare "Forza HTTPS" dal pannello).
+#RewriteEngine On
+#RewriteCond %{HTTPS} !=on
+#RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
