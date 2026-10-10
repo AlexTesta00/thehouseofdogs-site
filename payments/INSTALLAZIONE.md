@@ -70,7 +70,9 @@ Il workflow GitHub `.github/workflows/ci-cd.yml` carica via FTP **solo** la cart
 
 ---
 
-## 3. Password amministratore
+## 3. Password amministratore (facoltativa)
+
+Per scelta del venditore il pannello è **aperto senza login** (`'require_admin_login' => false`, valore di default): chi conosce l'URL può creare link cliente. I link portano solo a pagamenti verso il conto Mollie del venditore e la creazione è limitata a 60 link l'ora per IP. Se in futuro si vuole proteggere il pannello, imposta `'require_admin_login' => true` e configura la password come segue.
 
 La password non viene mai salvata in chiaro: in configurazione va il suo **hash**.
 
@@ -205,7 +207,7 @@ Questa app **non ha una propria dashboard**: lo stato dei pagamenti si segue su 
 
 ## 8. Sicurezza: cosa fa l'app
 
-- Password amministratore con `password_hash`, sessione PHP (cookie HttpOnly, SameSite=Lax, Secure su HTTPS, scadenza per inattività, rigenerazione ID al login).
+- Login facoltativo (`require_admin_login`): password con `password_hash`, sessione PHP (cookie HttpOnly, SameSite=Lax, Secure su HTTPS, scadenza per inattività, rigenerazione ID al login).
 - CSRF: token di sessione su ogni form e sull'API (`X-CSRF-Token`), più controllo `Sec-Fetch-Site`/`Origin`.
 - Limiti di frequenza su login, creazione link, apertura pagina cliente e checkout (per IP e per token).
 - Token cliente da 256 bit casuali; nel database è salvato solo l'hash SHA-256.

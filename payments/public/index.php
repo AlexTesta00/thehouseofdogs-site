@@ -11,14 +11,14 @@ $mode = hodpay_mode($cfg);
 hodpay_send_security_headers(hodpay_nonce());
 hodpay_housekeeping();
 
-if (!hodpay_admin_configured()) {
+if (hodpay_login_required() && !hodpay_admin_configured()) {
     hodpay_render_page('Configurazione richiesta', hodpay_alert('warn',
         '<strong>Password amministratore non impostata.</strong><br>Genera l\'hash con <code>php tools/make-password-hash.php</code> e inseriscilo in <code>config/config.php</code> alla voce <code>admin_password_hash</code>. Vedi INSTALLAZIONE.md.'
     ));
 }
 
 $loginError = null;
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+if (hodpay_login_required() && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!hodpay_same_origin_check() || !hodpay_csrf_check(isset($_POST['csrf']) && is_string($_POST['csrf']) ? $_POST['csrf'] : null)) {
         $loginError = 'Sessione non valida. Ricarica la pagina e riprova.';
     } elseif (!hodpay_rate_limit('login:' . hodpay_client_ip(), 8, 900)) {
@@ -58,6 +58,12 @@ $maxFmt = hodpay_e(hodpay_format_amount((int)$cfg['max_amount_cents'], $cfg['cur
 $desc = hodpay_e($cfg['purchase_description']);
 $hours = (int)$cfg['customer_link_hours'];
 $dashboard = hodpay_e($cfg['mollie_dashboard_url']);
+$logoutForm = hodpay_login_required() ? <<<HTML
+    <form method="post" action="logout.php" class="shrink-0">
+      <input type="hidden" name="csrf" value="{$csrf}">
+      <button type="submit" class="text-sm text-slate-500 hover:text-ink underline-offset-2 hover:underline">Esci</button>
+    </form>
+HTML : '';
 $modeNote = match ($mode) {
     'demo'    => hodpay_alert('warn', '<strong>Modalità demo.</strong> Nessuna chiave Mollie configurata: puoi provare il percorso, ma non verrà creato alcun pagamento reale né simulato.'),
     'test'    => hodpay_alert('info', '<strong>Modalità test.</strong> I link creano pagamenti di prova su Mollie, senza addebiti reali.'),
@@ -72,11 +78,7 @@ hodpay_render_page('Crea link di pagamento', <<<HTML
       <h1 class="text-2xl font-semibold tracking-tight">Crea link di pagamento</h1>
       <p class="mt-1 text-sm text-slate-600">Inserisci nome e importo. Il cliente completerà i suoi dati dal link.</p>
     </div>
-    <form method="post" action="logout.php" class="shrink-0">
-      <input type="hidden" name="csrf" value="{$csrf}">
-      <button type="submit" class="text-sm text-slate-500 hover:text-ink underline-offset-2 hover:underline">Esci</button>
-    </form>
-  </div>
+{$logoutForm}  </div>
   <div class="h-5"></div>
   {$modeNote}
 

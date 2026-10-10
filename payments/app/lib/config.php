@@ -7,6 +7,7 @@ function hodpay_config_defaults(): array
 {
     return [
         'mollie_api_key'       => '',
+        'require_admin_login'  => false,
         'admin_password_hash'  => '',
         'merchant_name'        => 'The House Of Dog',
         'purchase_description' => 'Caparra cucciolo - The House Of Dog',

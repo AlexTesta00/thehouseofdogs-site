@@ -20,6 +20,7 @@ $adminPassword = 'prova-selftest-' . bin2hex(random_bytes(4));
 $hash = password_hash($adminPassword, PASSWORD_DEFAULT);
 file_put_contents($tmp . '/config/config.php', "<?php\nreturn " . var_export([
     'mollie_api_key'      => '',
+    'require_admin_login' => true,
     'admin_password_hash' => $hash,
     'purchase_description' => 'Caparra cucciolo - Test',
     'base_url'            => 'https://example.test/payments',
@@ -119,6 +120,7 @@ check('rate limit 3 su 5', $okCount === 3);
 /* ---------- Autenticazione ---------- */
 section('Autenticazione');
 check('admin configurato', hodpay_admin_configured());
+check('login richiesto dalla config di test', hodpay_login_required());
 check('login password errata', !hodpay_login('password-sbagliata'));
 check('non admin prima del login', !hodpay_is_admin());
 /* session_regenerate_id non funziona in CLI: simuliamo solo la verifica */

@@ -12,7 +12,12 @@ return [
        La chiave viene mostrata una sola volta: conservala subito. */
     'mollie_api_key' => '',
 
-    /* Hash della password del commerciante. Generalo con:
+    /* Login del pannello commerciante. false = il pannello è aperto a chi conosce l'URL
+       (scelta del venditore: i link generati portano solo a pagamenti verso il suo conto Mollie).
+       true = richiede la password il cui hash è in admin_password_hash. */
+    'require_admin_login' => false,
+
+    /* Hash della password del commerciante (usato solo se require_admin_login è true). Generalo con:
          php tools/make-password-hash.php
        e incolla qui il risultato (inizia con $2y$ oppure $argon2). */
     'admin_password_hash' => '',

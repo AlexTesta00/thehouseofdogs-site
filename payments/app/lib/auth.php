@@ -3,6 +3,11 @@
 
 declare(strict_types=1);
 
+function hodpay_login_required(): bool
+{
+    return (bool)hodpay_config()['require_admin_login'];
+}
+
 function hodpay_admin_configured(): bool
 {
     $hash = hodpay_config()['admin_password_hash'];
@@ -11,6 +16,9 @@ function hodpay_admin_configured(): bool
 
 function hodpay_is_admin(): bool
 {
+    if (!hodpay_login_required()) {
+        return true;
+    }
     return session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['admin']) && $_SESSION['admin'] === true;
 }
 
