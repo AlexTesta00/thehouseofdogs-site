@@ -45,7 +45,7 @@
   <a href="./" class="text-sm underline underline-offset-4" style="color:var(--accent)">← Torna al sito</a>
   <p class="font-monolabel text-xs mt-8" style="color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase">INFORMATIVA PRIVACY E COOKIE</p>
   <h1 class="font-display text-4xl mt-3">Come trattiamo i tuoi dati</h1>
-  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 21 agosto 2026.</p>
+  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 19 novembre 2026.</p>
 
   <nav class="toc mt-8 p-5 rounded-2xl" style="background:var(--panel);border:1px solid rgba(74,96,121,.2)" aria-label="Indice">
     <p class="font-semibold mb-2">Indice</p>
