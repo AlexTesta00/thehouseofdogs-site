@@ -82,7 +82,7 @@
   <h3>c) Dati di contatto via WhatsApp, telefono ed email</h3>
   <p>Se ci scrivi su WhatsApp, ci chiami o ci mandi un'email, trattiamo il tuo numero o indirizzo e il contenuto della conversazione, incluse foto e video che ci invii.</p>
   <h3>d) Dati relativi al pagamento</h3>
-  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) sono gestiti da <strong>Stripe</strong> su pagine di Stripe. I dati della carta o dello strumento di pagamento non transitano mai sul nostro sito e non li conosciamo. Da Stripe riceviamo conferma dell'avvenuto pagamento, importo, data, nome ed email indicati in fase di pagamento.</p>
+  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) sono gestiti da <strong>Shopify</strong> su pagine di pagamento di Shopify. I dati della carta o dello strumento di pagamento non transitano mai sul nostro sito e non li conosciamo. Da Shopify riceviamo conferma dell'avvenuto pagamento, importo, data e i dati indicati in fase di pagamento (nome, email, telefono e indirizzo).</p>
   <h3>e) Dati contrattuali e di consegna</h3>
   <p>Per concludere la vendita e consegnare il cucciolo trattiamo dati anagrafici, indirizzo di consegna, codice fiscale e copia di un documento d'identità, richiesti al momento della prenotazione e necessari per l'accordo scritto, per la fatturazione e per la registrazione del passaggio di proprietà all'anagrafe degli animali d'affezione, come prevede la legge. Se scegli di pagare il saldo con un finanziamento, la richiesta viene gestita direttamente dalla finanziaria convenzionata, che tratta i tuoi dati come titolare autonomo secondo la propria informativa.</p>
 
@@ -103,7 +103,7 @@
   <p>I dati possono essere trattati, per le sole finalità indicate, da:</p>
   <ul>
     <li><strong>Fornitore di hosting</strong> del sito, che conserva i log tecnici e ospita il modulo di contatto (responsabile del trattamento).</li>
-    <li><strong>Stripe Payments Europe, Ltd.</strong> (Irlanda) per l'elaborazione dei pagamenti. Stripe tratta i dati di pagamento come titolare autonomo secondo la propria informativa: <a href="https://stripe.com/it/privacy" rel="noopener" target="_blank">stripe.com/it/privacy</a>.</li>
+    <li><strong>Shopify International Limited</strong> (Irlanda) per le pagine di pagamento e l'elaborazione dei pagamenti, anche tramite i propri fornitori di servizi di pagamento. Shopify tratta i dati secondo la propria informativa: <a href="https://www.shopify.com/it/legal/privacy" rel="noopener" target="_blank">shopify.com/it/legal/privacy</a>.</li>
     <li><strong>Microsoft</strong> (servizio di posta Outlook) per la ricezione e l'invio delle email.</li>
     <li><strong>Meta Platforms Ireland Ltd.</strong> se scegli di contattarci tramite WhatsApp: le conversazioni sono soggette anche ai termini e all'informativa di WhatsApp.</li>
     <li><strong>Veterinari</strong> e <strong>anagrafe degli animali d'affezione / ASL</strong> per i documenti sanitari e il passaggio di proprietà (obbligo di legge).</li>
@@ -114,7 +114,7 @@
   <p>I dati non vengono diffusi né venduti a terzi.</p>
 
   <h2 id="extraue">5. Trasferimenti fuori dall'Unione Europea</h2>
-  <p>Alcuni fornitori (Stripe, Microsoft, Meta) possono trasferire dati verso gli Stati Uniti. In tal caso il trasferimento avviene sulla base della decisione di adeguatezza della Commissione Europea per il quadro EU-US Data Privacy Framework, quando il fornitore vi aderisce, oppure delle clausole contrattuali standard approvate dalla Commissione, con le garanzie aggiuntive previste dal GDPR.</p>
+  <p>Alcuni fornitori (Shopify, Microsoft, Meta) possono trasferire dati verso gli Stati Uniti. In tal caso il trasferimento avviene sulla base della decisione di adeguatezza della Commissione Europea per il quadro EU-US Data Privacy Framework, quando il fornitore vi aderisce, oppure delle clausole contrattuali standard approvate dalla Commissione, con le garanzie aggiuntive previste dal GDPR.</p>
 
   <h2 id="conservazione">6. Per quanto tempo conserviamo i dati</h2>
   <ul>
@@ -145,18 +145,18 @@
   <p>Il sito e i servizi sono rivolti a persone maggiorenni. Non raccogliamo consapevolmente dati di minori di 18 anni; se un genitore o tutore ci segnala un trattamento di questo tipo, provvediamo alla cancellazione.</p>
 
   <h2 id="sicurezza">10. Sicurezza</h2>
-  <p>Il sito è servito tramite connessione cifrata (HTTPS). I dati del modulo vengono inviati alla nostra casella email e sono accessibili solo al titolare. Adottiamo misure tecniche e organizzative adeguate per proteggere i dati da accessi non autorizzati, perdita o distruzione. I pagamenti avvengono esclusivamente su infrastruttura Stripe, certificata PCI DSS.</p>
+  <p>Il sito è servito tramite connessione cifrata (HTTPS). I dati del modulo vengono inviati alla nostra casella email e sono accessibili solo al titolare. Adottiamo misure tecniche e organizzative adeguate per proteggere i dati da accessi non autorizzati, perdita o distruzione. I pagamenti avvengono esclusivamente su infrastruttura Shopify, certificata PCI DSS.</p>
 
   <h2 id="cookie">11. Cookie policy</h2>
   <p>Questo sito <strong>non utilizza cookie propri</strong>: nessun cookie tecnico, nessun cookie di profilazione, nessun sistema di analisi statistica o di tracciamento pubblicitario. Non utilizza nemmeno tecnologie equivalenti (local storage, pixel di tracciamento, fingerprinting).</p>
   <p>Poiché il sito non installa cookie né strumenti di tracciamento, <strong>non è richiesto un banner di consenso</strong> ai sensi delle Linee guida del Garante per la protezione dei dati personali del 10 giugno 2021.</p>
   <p>Servizi di terze parti raggiungibili dal sito:</p>
   <ul>
-    <li><strong>Pagine di pagamento Stripe</strong>: si aprono sul dominio di Stripe, che può installare cookie tecnici e di sicurezza necessari al pagamento secondo la propria cookie policy: <a href="https://stripe.com/it/legal/cookies-policy" rel="noopener" target="_blank">stripe.com/it/legal/cookies-policy</a>.</li>
+    <li><strong>Pagine di pagamento Shopify</strong>: si aprono sul dominio di Shopify, che può installare cookie tecnici e di sicurezza necessari al pagamento secondo la propria cookie policy: <a href="https://www.shopify.com/it/legal/cookies" rel="noopener" target="_blank">shopify.com/it/legal/cookies</a>.</li>
     <li><strong>WhatsApp</strong>: i collegamenti aprono l'app o il sito di WhatsApp, soggetti all'informativa di Meta.</li>
     <li><strong>Libreria grafica da CDN</strong> (cdn.tailwindcss.com): risorsa tecnica che non installa cookie sul tuo dispositivo.</li>
   </ul>
-  <p>Puoi comunque gestire o bloccare i cookie dalle impostazioni del tuo browser; le pagine di pagamento potrebbero non funzionare correttamente senza i cookie tecnici di Stripe.</p>
+  <p>Puoi comunque gestire o bloccare i cookie dalle impostazioni del tuo browser; le pagine di pagamento potrebbero non funzionare correttamente senza i cookie tecnici di Shopify.</p>
 
   <h2 id="modifiche">12. Modifiche a questa informativa</h2>
   <p>Possiamo aggiornare questa informativa per adeguarla a novità normative o a cambiamenti del servizio. La versione in vigore è sempre quella pubblicata su questa pagina, con la data di ultimo aggiornamento indicata in alto.</p>
