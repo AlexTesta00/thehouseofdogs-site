@@ -109,7 +109,7 @@
   <h2 id="saldo">8. Saldo finale e finanziamenti</h2>
   <p>Il saldo finale può essere effettuato:</p>
   <ul>
-    <li>con <strong>bonifico bancario</strong> o pagamento elettronico tracciabile;</li>
+    <li>con <strong>bonifico bancario istantaneo</strong>: come per la caparra, non sono accettati bonifici ordinari;</li>
     <li>oppure tramite <strong>finanziamento personalizzato con finanziaria convenzionata</strong> (ad esempio Compass), in comode rate mensili, fino a 12 rate, previa approvazione.</li>
   </ul>
   <p class="warn">Tutti i finanziamenti sono soggetti ad approvazione da parte della finanziaria. In caso di rifiuto del finanziamento, la caparra versata viene trattenuta anche se l'acquisto non si conclude. Se scegli di pagare tramite una finanziaria convenzionata, le commissioni e i costi del finanziamento vengono addebitati al cliente, secondo le condizioni comunicate dalla finanziaria prima della sottoscrizione.</p>
