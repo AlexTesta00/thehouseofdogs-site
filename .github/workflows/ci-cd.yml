@@ -29,6 +29,10 @@
 #   Webhook da registrare in Revolut Business (Business API, Webhooks v2):
 #     URL:    https://www.thehouseofdog.it/webhook-revolut.php
 #     Eventi: TransactionCreated e TransactionStateChanged
+#   Email delle prenotazioni: a ogni richiesta partono con mail() una notifica all'esercente e un riepilogo al cliente
+#   (mittente noreply@thehouseofdog.it). Variabile opzionale (Variables, non Secrets):
+#     BOOKING_MERCHANT_EMAIL -> indirizzo che riceve le notifiche. Default: houseofdogdigiuseppe@outlook.it.
+#                               Usata solo se è un indirizzo email valido.
 
 name: Deploy su Hostinger
 
@@ -87,13 +91,16 @@ jobs:
       # config.php (IBAN, intestatario, BIC, segreto del webhook Revolut) viene generato qui dai segreti del repository
       # e caricato insieme a site/. I valori non vengono mai stampati: il log riporta solo quali chiavi sono state scritte.
       # Senza BOOKING_IBAN o BOOKING_ACCOUNT_HOLDER il file non viene scritto (prenota.php mostra il ripiego WhatsApp).
-      # Database, log e segreto applicativo che l'app crea sul server in _prenotazioni/data/ sono esclusi dal caricamento.
+      # Le impostazioni email restano quelle predefinite (mail()); la variabile BOOKING_MERCHANT_EMAIL, se valida,
+      # cambia solo l'indirizzo che riceve le notifiche.
+      # Database, log, outbox e segreto applicativo che l'app crea sul server in _prenotazioni/data/ sono esclusi dal caricamento.
       - name: Prepara configurazione prenotazioni
         env:
           BOOKING_IBAN: ${{ secrets.BOOKING_IBAN }}
           BOOKING_ACCOUNT_HOLDER: ${{ secrets.BOOKING_ACCOUNT_HOLDER }}
           BOOKING_BIC: ${{ secrets.BOOKING_BIC }}
           REVOLUT_WEBHOOK_SECRET: ${{ secrets.REVOLUT_WEBHOOK_SECRET }}
+          BOOKING_MERCHANT_EMAIL: ${{ vars.BOOKING_MERCHANT_EMAIL }}
         run: |
           set -e
           rm -f site/_prenotazioni/config/config.php
@@ -122,6 +129,15 @@ jobs:
               $cfg["revolut_webhook_secrets"] = array_values(array_unique($secrets));
               $set[] = "revolut_webhook_secrets (" . count($cfg["revolut_webhook_secrets"]) . ")";
             }
+            $merchant = trim((string)getenv("BOOKING_MERCHANT_EMAIL"));
+            if ($merchant !== "") {
+              if (hodbook_email_header_safe($merchant)) {
+                $cfg["merchant_email"] = $merchant;
+                $set[] = "merchant_email";
+              } else {
+                echo "Attenzione: BOOKING_MERCHANT_EMAIL non è un indirizzo email valido, resta in uso il valore predefinito.\n";
+              }
+            }
             file_put_contents("site/_prenotazioni/config/config.php", "<?php\n/* Generato dal deploy GitHub: non modificare a mano, cambia i segreti del repository. */\nreturn " . var_export($cfg, true) . ";\n");
             echo "config.php prenotazioni generato con: " . implode(", ", $set) . "\n";
             if ($secrets === []) { echo "Attenzione: REVOLUT_WEBHOOK_SECRET assente, il webhook risponde 503 e lo stato delle prenotazioni non si aggiorna da solo.\n"; }
@@ -147,6 +163,7 @@ jobs:
             **/_prenotazioni/data/*.sqlite*
             **/_prenotazioni/data/*.log
             **/_prenotazioni/data/app-secret.php
+            **/_prenotazioni/data/outbox/**
             **/Thumbs.db
             **/.DS_Store
 

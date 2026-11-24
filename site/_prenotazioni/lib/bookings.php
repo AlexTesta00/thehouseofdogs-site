@@ -9,6 +9,15 @@ const HODBOOK_REF_LENGTH = 6;
 
 const HODBOOK_STATUSES = ['pending', 'incoming', 'paid', 'review'];
 
+/* Regola dell'esercente, mostrata testualmente nel modulo, nella pagina della prenotazione e nell'email al cliente.
+   Il sistema non distingue un bonifico ordinario da uno istantaneo: è un'indicazione al cliente, non un controllo. */
+const HODBOOK_INSTANT_TRANSFER_RULE = 'Non sono accettati bonifici ordinari: la caparra va versata solo con bonifico istantaneo.';
+
+/* Il modulo manda un'email all'indirizzo scritto dal visitatore: al massimo 3 prenotazioni per email ogni 24 ore,
+   così il sito non può essere usato per inondare di messaggi una terza persona. */
+const HODBOOK_MAX_BOOKINGS_PER_EMAIL = 3;
+const HODBOOK_EMAIL_WINDOW_SECONDS = 86400;
+
 /** Codice causale: prefisso + 6 caratteri casuali dell'alfabeto, senza separatori (es. HOD7K3F9Q). */
 function hodbook_reference_generate(string $prefix): string
 {
@@ -54,7 +63,7 @@ function hodbook_reference_extract(string $text, string $prefix, int $limit = 20
 /**
  * Crea una prenotazione e restituisce [token in chiaro, riga]. Il token compare solo nel link mostrato al cliente.
  * Nome prodotto e importo vengono copiati dalla configurazione. In caso di collisione sul codice si riprova.
- * $customer: first_name, last_name, email, phone (già validati). $refGen serve ai test.
+ * $customer: first_name, last_name, email, phone, residence, tax_code (già validati). $refGen serve ai test.
  */
 function hodbook_booking_create(PDO $db, array $cfg, string $productKey, array $customer, int $now, ?callable $refGen = null): array
 {
@@ -65,8 +74,8 @@ function hodbook_booking_create(PDO $db, array $cfg, string $productKey, array $
     $refGen ??= static fn(string $prefix): string => hodbook_reference_generate($prefix);
     $sql = 'INSERT INTO bookings
         (token_hash, reference, product_key, product_name, amount_cents, currency, first_name, last_name, email, phone,
-         terms_accepted_at, status, created_at, updated_at)
-        VALUES (:th, :ref, :pk, :pn, :amt, :cur, :fn, :ln, :em, :ph, :terms, \'pending\', :now, :now)';
+         residence, tax_code, terms_accepted_at, status, created_at, updated_at)
+        VALUES (:th, :ref, :pk, :pn, :amt, :cur, :fn, :ln, :em, :ph, :res, :cf, :terms, \'pending\', :now, :now)';
     for ($attempt = 0; $attempt < 10; $attempt++) {
         $token = hodbook_random_token();
         try {
@@ -82,6 +91,8 @@ function hodbook_booking_create(PDO $db, array $cfg, string $productKey, array $
                 ':ln'    => $customer['last_name'],
                 ':em'    => $customer['email'],
                 ':ph'    => $customer['phone'],
+                ':res'   => $customer['residence'],
+                ':cf'    => $customer['tax_code'],
                 ':terms' => $now,
                 ':now'   => $now,
             ]);
@@ -98,6 +109,35 @@ function hodbook_booking_create(PDO $db, array $cfg, string $productKey, array $
         return [$token, $row];
     }
     throw new RuntimeException('Impossibile generare un codice di prenotazione univoco.');
+}
+
+/** Prenotazioni fatte con questa email (senza distinzione di maiuscole) dopo $since. */
+function hodbook_bookings_count_by_email(PDO $db, string $email, int $since): int
+{
+    $st = $db->prepare('SELECT COUNT(*) FROM bookings WHERE email = :e AND created_at > :since');
+    $st->execute([':e' => strtolower($email), ':since' => $since]);
+    return (int)$st->fetchColumn();
+}
+
+/**
+ * Come hodbook_booking_create, ma solo se l'email non ha già HODBOOK_MAX_BOOKINGS_PER_EMAIL prenotazioni
+ * nelle ultime 24 ore. Controllo e inserimento avvengono nella stessa transazione (due invii contemporanei
+ * non superano il limite). Restituisce null se il limite è raggiunto: nessuna prenotazione creata.
+ */
+function hodbook_booking_create_limited(PDO $db, array $cfg, string $productKey, array $customer, int $now, ?callable $refGen = null): ?array
+{
+    return hodbook_db_tx($db, static function (PDO $db) use ($cfg, $productKey, $customer, $now, $refGen): ?array {
+        if (hodbook_bookings_count_by_email($db, (string)$customer['email'], $now - HODBOOK_EMAIL_WINDOW_SECONDS) >= HODBOOK_MAX_BOOKINGS_PER_EMAIL) {
+            return null;
+        }
+        return hodbook_booking_create($db, $cfg, $productKey, $customer, $now, $refGen);
+    });
+}
+
+/** Segna che l'email di riepilogo al cliente è stata consegnata al sistema di posta (la pagina lo può dire). */
+function hodbook_booking_mark_customer_email_sent(PDO $db, int $bookingId, int $now): void
+{
+    $db->prepare('UPDATE bookings SET customer_email_sent_at = :t WHERE id = :id')->execute([':t' => $now, ':id' => $bookingId]);
 }
 
 function hodbook_booking_by_id(PDO $db, int $id): ?array

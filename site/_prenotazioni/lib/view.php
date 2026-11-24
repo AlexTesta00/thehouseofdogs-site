@@ -114,8 +114,11 @@ function hodbook_wa_button(array $cfg, string $text, string $label): string
         . '<span>' . hodbook_e($label) . '</span></a>';
 }
 
-/** Campo di testo del modulo con etichetta, valore già inserito (escapato) ed eventuale errore. */
-function hodbook_field(string $name, string $label, array $values, array $errors, array $attrs = []): string
+/**
+ * Campo del modulo con etichetta, suggerimento facoltativo, valore già inserito (escapato) ed eventuale errore.
+ * $multiline = true produce una textarea (es. residenza) invece di un input.
+ */
+function hodbook_field(string $name, string $label, array $values, array $errors, array $attrs = [], string $hint = '', bool $multiline = false): string
 {
     $id = 'f-' . $name;
     $error = $errors[$name] ?? null;
@@ -123,12 +126,35 @@ function hodbook_field(string $name, string $label, array $values, array $errors
     foreach ($attrs as $k => $v) {
         $extra .= ' ' . $k . '="' . hodbook_e($v) . '"';
     }
-    $aria = $error !== null ? ' aria-invalid="true" aria-describedby="' . $id . '-err"' : '';
+    $describedBy = [];
+    if ($hint !== '') {
+        $describedBy[] = $id . '-hint';
+    }
+    if ($error !== null) {
+        $describedBy[] = $id . '-err';
+    }
+    $aria = ($error !== null ? ' aria-invalid="true"' : '') . ($describedBy !== [] ? ' aria-describedby="' . implode(' ', $describedBy) . '"' : '');
+    $value = hodbook_e($values[$name] ?? '');
+    $class = 'field w-full rounded-xl px-4 py-3 text-ink';
+    $control = $multiline
+        ? '<textarea id="' . $id . '" name="' . $name . '" required class="' . $class . '"' . $aria . $extra . '>' . $value . '</textarea>'
+        : '<input id="' . $id . '" name="' . $name . '" value="' . $value . '" required class="' . $class . '"' . $aria . $extra . '>';
     return '<div>'
         . '<label for="' . $id . '" class="block text-sm font-semibold mb-1.5">' . hodbook_e($label) . ' <span class="text-accent" aria-hidden="true">*</span></label>'
-        . '<input id="' . $id . '" name="' . $name . '" value="' . hodbook_e($values[$name] ?? '') . '" required class="field w-full rounded-xl px-4 py-3 text-ink"' . $aria . $extra . '>'
+        . ($hint !== '' ? '<p id="' . $id . '-hint" class="hint">' . hodbook_e($hint) . '</p>' : '')
+        . $control
         . ($error !== null ? '<p id="' . $id . '-err" class="err">' . hodbook_e($error) . '</p>' : '')
         . '</div>';
+}
+
+/** m***@example.com: abbastanza per riconoscere il proprio indirizzo, non per leggerlo da sopra una spalla. */
+function hodbook_mask_email(string $email): string
+{
+    $at = strrpos($email, '@');
+    if ($at === false || $at === 0) {
+        return '***';
+    }
+    return substr($email, 0, 1) . '***' . substr($email, $at);
 }
 
 /**
@@ -194,6 +220,10 @@ function hodbook_render_page(string $title, string $body, array $opts = []): nev
     .legal a:not(.btn){color:var(--accent);text-decoration:underline;text-underline-offset:3px}
     .box{background:var(--panel);border:1px solid rgba(74,96,121,.2);border-radius:1rem;padding:1.1rem 1.25rem}
     .warn{background:rgba(23,122,189,.1);border:1px solid rgba(23,122,189,.35);border-radius:1rem;padding:1rem 1.2rem;font-weight:600}
+    .legal .rule{background:var(--deep);color:#fff;border-radius:1rem;padding:1rem 1.2rem;font-weight:700;line-height:1.5}
+    .legal p.hint{font-size:.8rem;line-height:1.4;color:var(--text-secondary);margin:-.2rem 0 .45rem}
+    textarea.field{resize:vertical;min-height:5.2rem;line-height:1.45}
+    input[data-upper]{text-transform:uppercase}
     .eyebrow{color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.75rem}
     .legal p.muted,.muted{color:var(--text-secondary)}
     .nowrap{white-space:nowrap}

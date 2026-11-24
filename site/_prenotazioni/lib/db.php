@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-const HODBOOK_SCHEMA_VERSION = 1;
+const HODBOOK_SCHEMA_VERSION = 2;
 
 /** Connessione al database dell'app, aperta una volta per richiesta. */
 function hodbook_db(): PDO
@@ -62,7 +62,10 @@ function hodbook_db_is_unique_violation(PDOException $e): bool
     return (string)$e->getCode() === '23000' && str_contains($e->getMessage(), 'UNIQUE');
 }
 
-/** Migrazioni numerate con PRAGMA user_version. Idempotenti e serializzate da BEGIN IMMEDIATE. */
+/**
+ * Migrazioni numerate con PRAGMA user_version, serializzate da BEGIN IMMEDIATE. Ogni passo porta lo schema
+ * dalla versione precedente alla sua: un database nuovo li esegue tutti in fila, uno esistente solo i mancanti.
+ */
 function hodbook_db_migrate(PDO $db): void
 {
     if ((int)$db->query('PRAGMA user_version')->fetchColumn() >= HODBOOK_SCHEMA_VERSION) {
@@ -126,6 +129,22 @@ function hodbook_db_migrate(PDO $db): void
                 ts INTEGER NOT NULL
             )');
             $db->exec('CREATE INDEX IF NOT EXISTS idx_rate_bucket ON rate_limits (bucket, ts)');
+        }
+        if ($version < 2) {
+            /* Residenza e codice fiscale richiesti dal modulo; data di invio dell'email di riepilogo al cliente.
+               Le righe già presenti (solo database di sviluppo) restano valide con valori vuoti. */
+            $columns = array_column($db->query('PRAGMA table_info(bookings)')->fetchAll(), 'name');
+            if (!in_array('residence', $columns, true)) {
+                $db->exec("ALTER TABLE bookings ADD COLUMN residence TEXT NOT NULL DEFAULT ''");
+            }
+            if (!in_array('tax_code', $columns, true)) {
+                $db->exec("ALTER TABLE bookings ADD COLUMN tax_code TEXT NOT NULL DEFAULT ''");
+            }
+            if (!in_array('customer_email_sent_at', $columns, true)) {
+                $db->exec('ALTER TABLE bookings ADD COLUMN customer_email_sent_at INTEGER');
+            }
+            /* Limite di prenotazioni per indirizzo email nelle ultime 24 ore. */
+            $db->exec('CREATE INDEX IF NOT EXISTS idx_bookings_email_created ON bookings (email, created_at)');
         }
         $db->exec('PRAGMA user_version = ' . HODBOOK_SCHEMA_VERSION);
     });

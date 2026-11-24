@@ -65,7 +65,7 @@ $explain = match ($status) {
     'review'   => '<p class="mt-2">Importo ricevuto: <strong class="nowrap">'
         . hodbook_e($booking['received_cents'] !== null ? hodbook_format_amount((int)$booking['received_cents'], $currency) : '-')
         . '</strong>. Importo della caparra: <strong class="nowrap">' . hodbook_e($amount) . '</strong>.</p>',
-    default    => '<p class="mt-2">Fai il bonifico della caparra con i dati qui sotto: quando lo riceviamo, questa pagina lo mostra.</p>',
+    default    => '<p class="mt-2">Fai il bonifico istantaneo della caparra con i dati qui sotto: quando lo riceviamo, questa pagina lo mostra.</p>',
 };
 $live = in_array($status, ['pending', 'incoming'], true)
     ? '<p class="mt-2 text-sm" data-js-only hidden>La pagina controlla lo stato da sola ogni 20 secondi.</p>'
@@ -95,12 +95,15 @@ if ($status !== 'paid') {
             . hodbook_copy_row('Banca', $cfg['bank_name'], $cfg['bank_name'])
             . hodbook_copy_row('Importo', $amount, hodbook_amount_plain($amountCents), 'nowrap')
             . hodbook_copy_row('Causale', $reference, $reference, 'val-code');
+        /* La regola sta subito sopra le coordinate. Il sistema non distingue i bonifici ordinari da quelli istantanei:
+           la spiegazione resta neutra e non promette controlli. */
         $bank = '<section class="box mt-6" aria-labelledby="bonifico">'
             . '<h2 id="bonifico">Dati per il bonifico</h2>'
+            . '<p class="rule mt-4" id="regola-istantaneo">' . hodbook_e(HODBOOK_INSTANT_TRANSFER_RULE) . '</p>'
+            . '<p class="mt-3 text-sm">Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.</p>'
             . '<p class="mt-1 text-sm muted">Copia questi dati nell\'app o nel sito della tua banca.</p>'
             . '<dl class="kv mt-4">' . $rows . '</dl>'
             . '<p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p>'
-            . '<p class="mt-4 text-sm">Se la tua banca lo permette, scegli il <strong>bonifico istantaneo</strong>: arriva in pochi secondi e la conferma compare subito su questa pagina.</p>'
             . '</section>';
     } else {
         $bank = '<section class="box mt-6"><h2>Dati per il bonifico</h2>'
@@ -121,9 +124,16 @@ $contact = '<div class="mt-8">'
     . '<div class="mt-3">' . hodbook_wa_button($cfg, $waText, 'Avvisaci su WhatsApp') . '</div>'
     . '</div>';
 
+/* Riga sull'email di riepilogo: solo se l'invio è attivo e il messaggio è stato davvero consegnato al sistema di posta. */
+$mailLine = ($cfg['mail_mode'] !== 'off' && ($booking['customer_email_sent_at'] ?? null) !== null)
+    ? '<p class="mt-3 text-sm muted">Ti abbiamo inviato un\'email di riepilogo a <strong>' . hodbook_e(hodbook_mask_email((string)$booking['email']))
+      . '</strong>. Se non la trovi controlla la posta indesiderata.</p>'
+    : '';
+
 $body = hodbook_back_link()
     . '<p class="eyebrow mt-8">Prenotazione ' . hodbook_e($reference) . '</p>'
     . '<h1 class="font-display text-3xl sm:text-4xl mt-3">Ciao ' . hodbook_e((string)$booking['first_name']) . ', grazie per la prenotazione</h1>'
+    . $mailLine
     . $statusBox
     . $summary
     . $bank

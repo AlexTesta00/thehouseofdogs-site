@@ -1,8 +1,11 @@
 <?php
-/* House of Dogs - prenotazione con bonifico, passo 1: scelta del cucciolo e dati del cliente.
+/* House of Dogs - prenotazione con bonifico istantaneo, passo 1: scelta del cucciolo e dati del cliente.
    GET  prenota.php?tipo=<chiave>   modulo (senza un tipo valido: elenco dei cuccioli)
-   POST prenota.php                 crea la prenotazione e porta (303) a prenotazione.php?c=<token>
+   POST prenota.php                 crea la prenotazione, invia le due email (esercente e cliente)
+                                    e porta (303) a prenotazione.php?c=<token>
    Niente cookie e niente sessioni: la protezione CSRF è un token firmato con la data di emissione.
+   Limiti: 8 invii per IP all'ora, 3 prenotazioni per email in 24 ore (il modulo scrive all'indirizzo inserito).
+   Un errore di invio email non blocca mai la prenotazione: finisce solo nel log privato.
    Se IBAN e intestatario non sono configurati il modulo non compare: resta la prenotazione via WhatsApp. */
 
 declare(strict_types=1);
@@ -33,7 +36,7 @@ if (!$isPost) {
     if ($product === null) {
         hodbook_prenota_chooser($cfg);
     }
-    $empty = ['nome' => '', 'cognome' => '', 'email' => '', 'telefono' => '', 'termini' => false];
+    $empty = ['nome' => '', 'cognome' => '', 'email' => '', 'telefono' => '', 'residenza' => '', 'codice_fiscale' => '', 'termini' => false];
     hodbook_prenota_form($cfg, $tipo, $product, $empty, [], null, hodbook_form_token(time()));
 }
 
@@ -64,6 +67,8 @@ $values = [
     'cognome'  => hodbook_clean_text($_POST['cognome'] ?? '', 100),
     'email'    => hodbook_clean_text($_POST['email'] ?? '', 254),
     'telefono' => hodbook_clean_text($_POST['telefono'] ?? '', 40),
+    'residenza' => hodbook_clean_text($_POST['residenza'] ?? '', 400),
+    'codice_fiscale' => hodbook_clean_text($_POST['codice_fiscale'] ?? '', 40),
     'termini'  => hodbook_checkbox_on($_POST['termini'] ?? null),
 ];
 
@@ -78,14 +83,14 @@ if ($tokenState !== 'ok') {
         'expired'   => 'La pagina è rimasta aperta a lungo: controlla i dati e premi di nuovo il pulsante.',
         default     => 'Non siamo riusciti a verificare il modulo: controlla i dati e premi di nuovo il pulsante.',
     };
-    hodbook_prenota_form($cfg, $tipo, $product, $values, [], $message, $formToken);
+    hodbook_prenota_form($cfg, $tipo, $product, $values, [], hodbook_e($message), $formToken);
 }
 
 /* Honeypot: il campo nascosto "sito_web" lo compilano solo i bot. Nessuna prenotazione, messaggio generico. */
 $honeypot = $_POST['sito_web'] ?? '';
 if (!is_string($honeypot) || trim($honeypot) !== '') {
     hodbook_prenota_form($cfg, $tipo, $product, $values, [],
-        'Non è stato possibile completare la prenotazione. Riprova oppure scrivici su WhatsApp.', $formToken);
+        hodbook_e('Non è stato possibile completare la prenotazione. Riprova oppure scrivici su WhatsApp.'), $formToken);
 }
 
 [$data, $errors] = hodbook_validate_booking_form(['tipo' => $tipo] + $_POST, $products);
@@ -93,8 +98,20 @@ if ($errors !== []) {
     hodbook_prenota_form($cfg, $tipo, $product, $values, $errors, null, $formToken);
 }
 
-[$bookingToken, $booking] = hodbook_booking_create($db, $cfg, $tipo, $data, $now);
+/* Al massimo 3 prenotazioni per email in 24 ore: oltre, niente prenotazione e niente email. */
+$created = hodbook_booking_create_limited($db, $cfg, $tipo, $data, $now);
+if ($created === null) {
+    hodbook_log('prenotazione rifiutata: limite di richieste per email raggiunto');
+    hodbook_prenota_form($cfg, $tipo, $product, $values, [],
+        hodbook_e('Hai già inviato più richieste con questa email. ')
+        . '<a href="' . hodbook_e(hodbook_wa_url($cfg, 'Ciao! Vorrei prenotare: ' . $product['name'] . '.')) . '" target="_blank" rel="noopener noreferrer">Scrivici su WhatsApp</a>.',
+        $formToken);
+}
+[$bookingToken, $booking] = $created;
 hodbook_log(sprintf('prenotazione creata #%d codice=%s tipo=%s', (int)$booking['id'], $booking['reference'], $tipo));
+
+/* Le due email partono dopo il salvataggio e prima del redirect; un errore non blocca nulla (solo una riga di log). */
+hodbook_booking_send_emails($cfg, $booking, $bookingToken, $now, $db);
 
 header('Location: prenotazione.php?c=' . $bookingToken, true, 303);
 exit;
@@ -134,23 +151,26 @@ function hodbook_prenota_chooser(array $cfg, ?string $message = null): never
     }
     $alert = $message !== null ? '<div class="alert alert-error mt-6" role="alert"><p>' . hodbook_e($message) . '</p></div>' : '';
     hodbook_render_page('Prenota il tuo cucciolo', hodbook_back_link()
-        . '<p class="eyebrow mt-8">Prenotazione con bonifico</p>'
+        . '<p class="eyebrow mt-8">Prenotazione con bonifico istantaneo</p>'
         . '<h1 class="font-display text-3xl sm:text-4xl mt-3">Quale cucciolo vuoi prenotare?</h1>'
-        . '<p class="mt-3 muted">Scegli il tipo di cucciolo: ti chiediamo pochi dati e ti mostriamo subito i dati per il bonifico della caparra.</p>'
+        . '<p class="mt-3 muted">Scegli il tipo di cucciolo: ti chiediamo pochi dati e ti mostriamo subito i dati per il bonifico istantaneo della caparra.</p>'
         . $alert
         . '<ul class="mt-7 grid gap-3" role="list">' . $items . '</ul>'
         . '<p class="mt-8 text-sm muted">Hai domande prima di prenotare? <a href="' . hodbook_e(hodbook_wa_url($cfg, 'Ciao! Ho una domanda prima di prenotare un cucciolo.')) . '" target="_blank" rel="noopener noreferrer">Scrivici su WhatsApp</a>.</p>'
         . hodbook_legal_links());
 }
 
-/** Modulo di prenotazione, con eventuali errori per campo e valori già inseriti (sempre escapati). */
-function hodbook_prenota_form(array $cfg, string $tipo, array $product, array $values, array $errors, ?string $formError, string $token): never
+/**
+ * Modulo di prenotazione, con eventuali errori per campo e valori già inseriti (sempre escapati).
+ * $formErrorHtml: messaggio generale già in HTML sicuro (testo passato da hodbook_e, eventuale link costruito qui).
+ */
+function hodbook_prenota_form(array $cfg, string $tipo, array $product, array $values, array $errors, ?string $formErrorHtml, string $token): never
 {
     $amount = hodbook_format_amount((int)$product['amount_cents'], $cfg['currency']);
 
     $alert = '';
-    if ($formError !== null) {
-        $alert = '<div class="alert alert-error" role="alert"><p>' . hodbook_e($formError) . '</p></div>';
+    if ($formErrorHtml !== null) {
+        $alert = '<div class="alert alert-error" role="alert"><p>' . $formErrorHtml . '</p></div>';
     } elseif ($errors !== []) {
         $n = count($errors);
         $alert = '<div class="alert alert-error" role="alert"><p>' . ($n === 1 ? 'Controlla il campo evidenziato.' : 'Controlla i ' . $n . ' campi evidenziati.') . '</p></div>';
@@ -161,7 +181,13 @@ function hodbook_prenota_form(array $cfg, string $tipo, array $product, array $v
         . hodbook_field('cognome', 'Cognome', $values, $errors, ['type' => 'text', 'autocomplete' => 'family-name', 'maxlength' => '100'])
         . '</div>'
         . hodbook_field('email', 'Email', $values, $errors, ['type' => 'email', 'autocomplete' => 'email', 'inputmode' => 'email', 'maxlength' => '254', 'spellcheck' => 'false'])
-        . hodbook_field('telefono', 'Telefono', $values, $errors, ['type' => 'tel', 'autocomplete' => 'tel', 'inputmode' => 'tel', 'maxlength' => '40', 'placeholder' => 'Es. 333 123 4567']);
+        . hodbook_field('telefono', 'Telefono', $values, $errors, ['type' => 'tel', 'autocomplete' => 'tel', 'inputmode' => 'tel', 'maxlength' => '40', 'placeholder' => 'Es. 333 123 4567'])
+        . hodbook_field('residenza', 'Residenza', $values, $errors,
+            ['rows' => '2', 'maxlength' => '200', 'autocomplete' => 'street-address', 'placeholder' => 'Es. Via Roma 12, 70022 Altamura (BA)'],
+            'Via e numero civico, CAP, città e provincia', true)
+        . hodbook_field('codice_fiscale', 'Codice fiscale', $values, $errors,
+            ['type' => 'text', 'maxlength' => '16', 'autocapitalize' => 'characters', 'autocomplete' => 'off', 'spellcheck' => 'false', 'data-upper' => '1'],
+            '16 caratteri: lo trovi sulla tessera sanitaria.');
 
     $termsError = $errors['termini'] ?? null;
     $termsAria = $termsError !== null ? ' aria-invalid="true" aria-describedby="f-termini-err"' : '';
@@ -175,9 +201,9 @@ function hodbook_prenota_form(array $cfg, string $tipo, array $product, array $v
         . '</div>';
 
     $body = hodbook_back_link()
-        . '<p class="eyebrow mt-8">Prenotazione con bonifico</p>'
+        . '<p class="eyebrow mt-8">Prenotazione con bonifico istantaneo</p>'
         . '<h1 class="font-display text-3xl sm:text-4xl mt-3">Prenota il tuo cucciolo</h1>'
-        . '<p class="mt-3 muted">Lascia i tuoi dati: ti assegniamo un codice di prenotazione e ti mostriamo subito i dati per versare la caparra con bonifico.</p>'
+        . '<p class="mt-3 muted">Lascia i tuoi dati: ti assegniamo un codice di prenotazione e ti mostriamo subito i dati per versare la caparra con bonifico istantaneo. Ti mandiamo anche un riepilogo via email.</p>'
         . '<section class="box mt-7" aria-label="Cucciolo scelto">'
         . '<p class="text-xs font-semibold uppercase tracking-widest muted">Hai scelto</p>'
         . '<div class="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">'
@@ -193,8 +219,9 @@ function hodbook_prenota_form(array $cfg, string $tipo, array $product, array $v
         . '<div class="hp-field" aria-hidden="true"><label>Non compilare questo campo<input type="text" name="sito_web" tabindex="-1" autocomplete="off"></label></div>'
         . $fields
         . $terms
-        . '<p class="text-sm muted">Usiamo questi dati solo per gestire la prenotazione e ricontattarti, come spiegato nell\'<a href="privacy.php" target="_blank" rel="noopener">informativa privacy</a>.</p>'
-        . '<p class="warn">La caparra non è rimborsabile in caso di rinuncia. Prima del pagamento ti confermiamo sempre per iscritto cucciolo, prezzo totale, documenti e consegna.</p>'
+        . '<p class="text-sm muted">Usiamo questi dati solo per gestire la prenotazione, mandarti il riepilogo via email e ricontattarti, come spiegato nell\'<a href="privacy.php" target="_blank" rel="noopener">informativa privacy</a>.</p>'
+        . '<div class="warn"><p>La caparra non è rimborsabile in caso di rinuncia. Prima del pagamento ti confermiamo sempre per iscritto cucciolo, prezzo totale, documenti e consegna.</p>'
+        . '<p class="mt-2">' . hodbook_e(HODBOOK_INSTANT_TRANSFER_RULE) . '</p></div>'
         . '<button type="submit" id="prenota-submit" class="btn btn-primary rounded-full px-7 py-3.5 font-semibold w-full sm:w-auto sm:justify-self-start">Prenota e vedi i dati per il bonifico</button>'
         . '</form>'
         . '<p class="mt-8 text-sm muted">Preferisci parlarne prima? <a href="' . hodbook_e(hodbook_wa_url($cfg, 'Ciao! Vorrei informazioni prima di prenotare: ' . $product['name'] . '.')) . '" target="_blank" rel="noopener noreferrer">Scrivici su WhatsApp</a>.</p>'

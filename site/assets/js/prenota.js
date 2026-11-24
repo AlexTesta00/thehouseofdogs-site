@@ -71,10 +71,26 @@
     var invalid = form.querySelector('[aria-invalid="true"]');
     if (invalid) invalid.focus();
 
-    Array.prototype.forEach.call(form.querySelectorAll('input'), function (el) {
+    Array.prototype.forEach.call(form.querySelectorAll('input, textarea'), function (el) {
       el.addEventListener('input', function () { el.removeAttribute('aria-invalid'); });
       el.addEventListener('change', function () { el.removeAttribute('aria-invalid'); });
     });
+
+    /* Codice fiscale incollato con spazi (es. "RSS MRA 80A01 H501U"): senza questo il limite di 16 caratteri
+       lo taglierebbe. Spazi tolti e maiuscole; il server normalizza comunque. */
+    var cf = document.getElementById('f-codice_fiscale');
+    if (cf) {
+      cf.addEventListener('paste', function (ev) {
+        var data = ev.clipboardData || window.clipboardData;
+        var text = data ? data.getData('text') : '';
+        if (!text) return;
+        ev.preventDefault();
+        var start = typeof cf.selectionStart === 'number' ? cf.selectionStart : cf.value.length;
+        var end = typeof cf.selectionEnd === 'number' ? cf.selectionEnd : cf.value.length;
+        cf.value = (cf.value.slice(0, start) + text + cf.value.slice(end)).replace(/\s+/g, '').toUpperCase().slice(0, 16);
+        cf.removeAttribute('aria-invalid');
+      });
+    }
 
     form.addEventListener('submit', function () {
       if (!submit) return;

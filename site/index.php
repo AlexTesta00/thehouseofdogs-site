@@ -350,7 +350,7 @@ $formErrore  = isset($_GET['errore']);
         </article>
       </div>
 
-      <p class="reveal mt-8 text-sm text-inksoft max-w-3xl"><span class="part">Con il bottone <strong>Prenota</strong> prenoti online e versi la caparra di prenotazione con bonifico bancario. Prima ti confermiamo sempre tutto per iscritto: cucciolo, prezzo totale, documenti e consegna. <strong>La caparra non è rimborsabile</strong> in caso di rinuncia. La prenotazione è regolata dalle nostre <a href="termini.php" class="underline underline-offset-2 text-accent">Condizioni di vendita</a>.</span></p>
+      <p class="reveal mt-8 text-sm text-inksoft max-w-3xl"><span class="part">Con il bottone <strong>Prenota</strong> prenoti online e versi la caparra di prenotazione con bonifico bancario istantaneo. Prima ti confermiamo sempre tutto per iscritto: cucciolo, prezzo totale, documenti e consegna. <strong>La caparra non è rimborsabile</strong> in caso di rinuncia. La prenotazione è regolata dalle nostre <a href="termini.php" class="underline underline-offset-2 text-accent">Condizioni di vendita</a>.</span></p>
     </div>
   </section>
 

@@ -65,14 +65,32 @@ function hodbook_validate_name(mixed $v, string $label): array
     return [$s, null];
 }
 
-/** Email in caratteri ASCII, salvata in minuscolo. */
+/**
+ * Email usabile senza rischi in un'intestazione (To, Reply-To): parte locale fatta solo di caratteri "atext"
+ * (niente virgolette, virgole, spazi, < > ; : \), dominio con lettere, cifre, punti e trattini.
+ */
+function hodbook_email_header_safe(string $e): bool
+{
+    return strlen($e) <= 254
+        && (bool)preg_match('/^[A-Za-z0-9.!#$%&\'*+\/=?^_`{|}~\-]+@[A-Za-z0-9](?:[A-Za-z0-9.\-]*[A-Za-z0-9])?\.[A-Za-z]{2,}\z/', $e)
+        && filter_var($e, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+/** Email "stretta" (solo lettere, cifre e . _ % + -): l'unica accettata come mittente di busta (-f) di mail(). */
+function hodbook_email_strict(string $e): bool
+{
+    return hodbook_email_header_safe($e)
+        && (bool)preg_match('/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\z/', $e);
+}
+
+/** Email in caratteri ASCII, salvata in minuscolo. Deve poter stare in un'intestazione: il cliente riceve un'email. */
 function hodbook_validate_email(mixed $v): array
 {
     $s = strtolower(hodbook_clean_text($v, 300));
     if ($s === '') {
         return [null, "Inserisci l'email."];
     }
-    if (strlen($s) > 254 || !preg_match('/^[\x21-\x7E]+\z/', $s) || filter_var($s, FILTER_VALIDATE_EMAIL) === false) {
+    if (strlen($s) > 254 || !preg_match('/^[\x21-\x7E]+\z/', $s) || !hodbook_email_header_safe($s)) {
         return [null, "L'email non sembra valida: ricontrollala."];
     }
     return [$s, null];
@@ -95,6 +113,82 @@ function hodbook_validate_phone(mixed $v): array
     return [$n, null];
 }
 
+/**
+ * Residenza su una riga: spazi e a capo compressi, 10-200 caratteri, almeno una cifra e una lettera.
+ * Caratteri ammessi: lettere, cifre, spazi e , . ' ’ / - ( ) °
+ */
+function hodbook_validate_residence(mixed $v): array
+{
+    $s = hodbook_clean_text($v, 400);
+    if ($s === '') {
+        return [null, 'Inserisci la residenza.'];
+    }
+    $len = hodbook_len($s);
+    if ($len < 10 || $len > 200) {
+        return [null, 'La residenza deve avere tra 10 e 200 caratteri: via e numero civico, CAP, città e provincia.'];
+    }
+    if (!preg_match("/^[\\p{L}\\p{M}0-9 ,.'\u{2019}\\/\\-()\u{00B0}]+\\z/u", $s)) {
+        return [null, "La residenza può contenere solo lettere, numeri, spazi e i segni , . ' / - ( ) °"];
+    }
+    if (!preg_match('/[0-9]/', $s) || !preg_match('/\p{L}/u', $s)) {
+        return [null, 'Scrivi la residenza completa: via e numero civico, CAP, città e provincia.'];
+    }
+    return [$s, null];
+}
+
+/** Codice fiscale senza spazi e in maiuscolo. */
+function hodbook_tax_code_normalize(string $s): string
+{
+    return strtoupper(preg_replace('/\s+/u', '', $s) ?? '');
+}
+
+/**
+ * Codice fiscale di persona fisica: 16 caratteri con la struttura ufficiale, omocodia compresa (le 7 posizioni
+ * numeriche possono essere sostituite da L M N P Q R S T U V), giorno di nascita plausibile (1-31, +40 per le donne)
+ * e carattere di controllo (tabelle dei caratteri in posizione dispari e pari, somma modulo 26).
+ */
+function hodbook_tax_code_valid(string $cf): bool
+{
+    $cf = hodbook_tax_code_normalize($cf);
+    $num = '[0-9LMNPQRSTUV]';
+    if (!preg_match('/^[A-Z]{6}' . $num . '{2}[ABCDEHLMPRST]' . $num . '{2}[A-Z]' . $num . '{3}[A-Z]\z/', $cf)) {
+        return false;
+    }
+    $day = (int)strtr(substr($cf, 9, 2), 'LMNPQRSTUV', '0123456789');
+    if (!(($day >= 1 && $day <= 31) || ($day >= 41 && $day <= 71))) {
+        return false;
+    }
+    static $odd = [
+        '0' => 1, '1' => 0, '2' => 5, '3' => 7, '4' => 9, '5' => 13, '6' => 15, '7' => 17, '8' => 19, '9' => 21,
+        'A' => 1, 'B' => 0, 'C' => 5, 'D' => 7, 'E' => 9, 'F' => 13, 'G' => 15, 'H' => 17, 'I' => 19, 'J' => 21,
+        'K' => 2, 'L' => 4, 'M' => 18, 'N' => 20, 'O' => 11, 'P' => 3, 'Q' => 6, 'R' => 8, 'S' => 12, 'T' => 14,
+        'U' => 16, 'V' => 10, 'W' => 22, 'X' => 25, 'Y' => 24, 'Z' => 23,
+    ];
+    $sum = 0;
+    for ($i = 0; $i < 15; $i++) {
+        $c = $cf[$i];
+        if ($i % 2 === 0) {
+            $sum += $odd[$c];                                   /* 1°, 3°, 5° ... carattere */
+        } else {
+            $o = ord($c);
+            $sum += ($o >= 48 && $o <= 57) ? $o - 48 : $o - 65; /* 2°, 4°, 6° ...: cifre 0-9, lettere A=0 ... Z=25 */
+        }
+    }
+    return $cf[15] === chr(65 + $sum % 26);
+}
+
+function hodbook_validate_tax_code(mixed $v): array
+{
+    $s = hodbook_tax_code_normalize(hodbook_clean_text($v, 40));
+    if ($s === '') {
+        return [null, 'Inserisci il codice fiscale.'];
+    }
+    if (!hodbook_tax_code_valid($s)) {
+        return [null, 'Codice fiscale non valido: controlla i 16 caratteri.'];
+    }
+    return [$s, null];
+}
+
 /** Casella "Ho letto e accetto le Condizioni di vendita". */
 function hodbook_checkbox_on(mixed $v): bool
 {
@@ -102,8 +196,9 @@ function hodbook_checkbox_on(mixed $v): bool
 }
 
 /**
- * Valida il modulo di prenotazione. $in sono i campi POST (nome, cognome, email, telefono, termini, tipo),
- * $products la mappa dei prodotti in configurazione. Restituisce [dati normalizzati, errori per campo].
+ * Valida il modulo di prenotazione. $in sono i campi POST (nome, cognome, email, telefono, residenza,
+ * codice_fiscale, termini, tipo), $products la mappa dei prodotti in configurazione.
+ * Restituisce [dati normalizzati, errori per campo].
  */
 function hodbook_validate_booking_form(array $in, array $products): array
 {
@@ -125,6 +220,14 @@ function hodbook_validate_booking_form(array $in, array $products): array
     [$out['phone'], $e] = hodbook_validate_phone($in['telefono'] ?? null);
     if ($e !== null) {
         $errors['telefono'] = $e;
+    }
+    [$out['residence'], $e] = hodbook_validate_residence($in['residenza'] ?? null);
+    if ($e !== null) {
+        $errors['residenza'] = $e;
+    }
+    [$out['tax_code'], $e] = hodbook_validate_tax_code($in['codice_fiscale'] ?? null);
+    if ($e !== null) {
+        $errors['codice_fiscale'] = $e;
     }
     if (!hodbook_checkbox_on($in['termini'] ?? null)) {
         $errors['termini'] = 'Per prenotare devi accettare le Condizioni di vendita.';

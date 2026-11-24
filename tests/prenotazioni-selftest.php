@@ -32,8 +32,9 @@ register_shutdown_function(static function () use ($tmp): void {
             proc_close($s['proc']);
         }
     }
-    $GLOBALS['DB'] = null;
-    $GLOBALS['failingDb'] = null;
+    foreach (['DB', 'failingDb', 'db3', 'migrated'] as $handle) {
+        $GLOBALS[$handle] = null;
+    }
     gc_collect_cycles();
     $rm = static function (string $dir) use (&$rm): void {
         foreach (scandir($dir) ?: [] as $name) {
@@ -45,7 +46,11 @@ register_shutdown_function(static function () use ($tmp): void {
         }
         @rmdir($dir);
     };
-    if (is_dir($tmp)) {
+    /* Su Windows un server appena fermato può tenere aperto il database per qualche istante: si riprova. */
+    for ($attempt = 0; $attempt < 15 && is_dir($tmp); $attempt++) {
+        if ($attempt > 0) {
+            usleep(200000);
+        }
         $rm($tmp);
     }
 });
@@ -58,18 +63,27 @@ const VECTOR_SIG = 'v1=bca326fb378d0da7f7c490ad584a8106bab9723d8d9cdd0d50b4c5b3b
 $secretA = 'wsk_' . bin2hex(random_bytes(16));
 $secretB = 'wsk_' . bin2hex(random_bytes(16));
 const TEST_IBAN = 'IT60X0542811101000000123456';   /* IBAN di esempio con cifre di controllo valide */
+const TEST_SITE_URL = 'https://prenota.example.test';   /* diverso dall'host del server di prova: i link delle email non vengono da Host */
+const TEST_MERCHANT = 'esercente@example.test';
+/* Codici fiscali calcolati con l'algoritmo ufficiale (verificato su codici pubblicati come validi: RSSMRA80A01H501U, CCCFBA85D03L219P). */
+const CF_OK = 'RSSMRA80A01H501U';
+const CF_OK_2 = 'BNCLRA92M55A662S';     /* donna (giorno + 40) */
 
 function write_config(string $dir, array $cfg): void
 {
     file_put_contents($dir . '/config/config.php', "<?php\nreturn " . var_export($cfg, true) . ";\n");
 }
 
-write_config($tmp, [
+$testConfig = [
     'bank_account_holder'     => 'TITOLARE DI PROVA',
     'bank_iban'               => 'it60 x054 2811 1010 0000 0123 456',
     'bank_bic'                => 'revolt21',
     'revolut_webhook_secrets' => $secretA,
-]);
+    'mail_mode'               => 'file',
+    'site_url'                => TEST_SITE_URL . '/',
+    'merchant_email'          => TEST_MERCHANT,
+];
+write_config($tmp, $testConfig);
 
 define('HODBOOK_PRIVATE_DIR', $tmp);
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
@@ -143,11 +157,48 @@ function deliver(array|string $payload, ?array $cfg = null, ?string $secret = nu
     $nowMs = (int)floor(microtime(true) * 1000);
     return hodbook_webhook_handle('POST', sign($raw, $secret ?? $secretA, $nowMs), $raw, $cfg ?? $CFG, $nowMs, $DB);
 }
+/** Dati cliente già validati (come li produce hodbook_validate_booking_form). */
+function customer(array $over = []): array
+{
+    return array_merge(['first_name' => 'Maria', 'last_name' => 'Rossi', 'email' => 'maria@example.com', 'phone' => '+393331234567',
+        'residence' => 'Via Roma 12, 70022 Altamura (BA)', 'tax_code' => CF_OK], $over);
+}
 function new_booking(string $key = 'barboncino'): array
 {
     global $CFG, $DB;
-    [, $row] = hodbook_booking_create($DB, $CFG, $key, ['first_name' => 'Maria', 'last_name' => 'Rossi', 'email' => 'maria@example.com', 'phone' => '+393331234567'], time());
+    [, $row] = hodbook_booking_create($DB, $CFG, $key, customer(), time());
     return $row;
+}
+
+/* ---------- Helper per le email in modalità "file" ---------- */
+/** File .eml in outbox, eventualmente solo quelli di un codice di prenotazione (il codice è nel nome del file). */
+function outbox(string $privateDir, string $reference = ''): array
+{
+    $files = glob($privateDir . '/data/outbox/*.eml') ?: [];
+    sort($files);
+    return array_values(array_filter($files, static fn(string $f): bool => $reference === '' || str_contains(basename($f), '-' . $reference . '-')));
+}
+/** Intestazioni (ripiegature ricomposte, nomi in minuscolo, valori in lista) e corpo di un messaggio. */
+function eml(string $raw): array
+{
+    [$head, $body] = array_pad(explode("\r\n\r\n", $raw, 2), 2, '');
+    $unfolded = preg_replace("/\r\n[ \t]+/", ' ', $head) ?? '';
+    $headers = [];
+    foreach (explode("\r\n", $unfolded) as $line) {
+        [$name, $value] = array_pad(explode(':', $line, 2), 2, '');
+        $headers[strtolower(trim($name))][] = trim($value);
+    }
+    return ['head' => $head, 'headers' => $headers, 'body' => $body];
+}
+/** Decodifica le encoded-word =?UTF-8?B?...?= (lo spazio tra due parole codificate adiacenti non conta). */
+function mime_decode(string $value): string
+{
+    $value = preg_replace('/\?=\s+=\?/', '?==?', $value) ?? '';
+    return preg_replace_callback('/=\?UTF-8\?B\?([A-Za-z0-9+\/=]*)\?=/i', static fn(array $m): string => (string)base64_decode($m[1]), $value) ?? '';
+}
+function hdr(array $msg, string $name): string
+{
+    return $msg['headers'][strtolower($name)][0] ?? '';
 }
 function bk(array $booking): ?array
 {
@@ -176,6 +227,34 @@ $tables = $DB->query("SELECT name FROM sqlite_master WHERE type = 'table' ORDER 
 check('tabelle create', array_values(array_intersect(['bookings', 'rate_limits', 'revolut_events', 'revolut_transactions'], $tables)) === ['bookings', 'rate_limits', 'revolut_events', 'revolut_transactions'], implode(',', $tables));
 hodbook_db_migrate($DB);
 check('migrazione ripetuta senza errori', (int)$DB->query('PRAGMA user_version')->fetchColumn() === HODBOOK_SCHEMA_VERSION);
+$cols = array_column($DB->query('PRAGMA table_info(bookings)')->fetchAll(), 'name');
+check('schema nuovo: phone, residence, tax_code, customer_email_sent_at', array_diff(['phone', 'residence', 'tax_code', 'customer_email_sent_at'], $cols) === [], implode(',', $cols));
+check('indice per il limite per email', (bool)$DB->query("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_bookings_email_created'")->fetchColumn());
+
+/* Database di sviluppo creato con lo schema 1 (con dati): deve aggiornarsi senza errori e senza perdere righe. */
+$v1Path = $tmp . '/data/schema-v1.sqlite';
+$v1 = new PDO('sqlite:' . $v1Path, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$v1->exec("CREATE TABLE bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, token_hash TEXT NOT NULL UNIQUE, reference TEXT NOT NULL UNIQUE,
+    product_key TEXT NOT NULL, product_name TEXT NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL, first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, terms_accepted_at INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending',
+    received_cents INTEGER, paid_tx_id TEXT, paid_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)");
+$v1->exec("CREATE TABLE revolut_events (id INTEGER PRIMARY KEY AUTOINCREMENT, body_hash TEXT NOT NULL UNIQUE, event TEXT NOT NULL, tx_id TEXT, received_at INTEGER NOT NULL)");
+$v1->exec('CREATE TABLE revolut_transactions (tx_id TEXT PRIMARY KEY, state TEXT, state_event_ts INTEGER, amount_cents INTEGER, currency TEXT, reference_text TEXT, booking_id INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
+$v1->exec('CREATE TABLE rate_limits (bucket TEXT NOT NULL, ts INTEGER NOT NULL)');
+$v1->exec("INSERT INTO bookings (token_hash, reference, product_key, product_name, amount_cents, currency, first_name, last_name, email, phone, terms_accepted_at, created_at, updated_at)
+    VALUES ('h', 'HODVECCHIO', 'maltese', 'Caparra Maltese Toy', 40000, 'EUR', 'Anna', 'Bianchi', 'anna@example.com', '+39333', 1, 1, 1)");
+$v1->exec('PRAGMA user_version = 1');
+$v1 = null;
+$migrated = hodbook_db_open($v1Path);
+$old = $migrated->query("SELECT * FROM bookings WHERE reference = 'HODVECCHIO'")->fetch();
+check('database con schema 1: migrato alla versione corrente', (int)$migrated->query('PRAGMA user_version')->fetchColumn() === HODBOOK_SCHEMA_VERSION);
+check('database con schema 1: riga conservata, telefono intatto, nuovi campi vuoti', is_array($old) && $old['phone'] === '+39333'
+    && $old['residence'] === '' && $old['tax_code'] === '' && $old['customer_email_sent_at'] === null);
+[, $afterMigration] = hodbook_booking_create($migrated, $CFG, 'maltese', customer(), time());
+check('database migrato: nuove prenotazioni con residenza e codice fiscale', $afterMigration['residence'] === 'Via Roma 12, 70022 Altamura (BA)' && $afterMigration['tax_code'] === CF_OK);
+$old = null;
+$afterMigration = null;
+$migrated = null;
 
 /* =================================================================== */
 section('Configurazione');
@@ -205,6 +284,18 @@ check('products sostituisce l\'elenco e scarta le voci non valide', $c['products
 $c = hodbook_config_normalize(['reference_prefix' => 'h-o-d', 'currency' => 'eur', 'timestamp_tolerance_seconds' => 5, 'revolut_account_ids' => 'ACC-1, acc-2']);
 check('prefisso, valuta, tolleranza minima, conti normalizzati', $c['reference_prefix'] === 'HOD' && $c['currency'] === 'EUR'
     && $c['timestamp_tolerance_seconds'] === 30 && $c['revolut_account_ids'] === ['acc-1', 'acc-2']);
+check('email: valori predefiniti', $def['merchant_email'] === 'houseofdogdigiuseppe@outlook.it' && $def['mail_from_address'] === 'noreply@thehouseofdog.it'
+    && $def['mail_from_name'] === 'House of Dogs' && $def['mail_mode'] === 'mail' && $def['site_url'] === 'https://www.thehouseofdog.it');
+check('config di test: modalità file, site_url senza slash finale', $CFG['mail_mode'] === 'file' && $CFG['site_url'] === TEST_SITE_URL && $CFG['merchant_email'] === TEST_MERCHANT);
+$c = hodbook_config_normalize(['merchant_email' => "x@example.com\r\nBcc: evil@example.com", 'mail_from_address' => 'non un indirizzo',
+    'mail_mode' => 'smtp', 'site_url' => 'javascript:alert(1)', 'mail_from_name' => "Nome\r\nBcc: evil@example.com"]);
+check('email: valori non validi tornano ai predefiniti', $c['merchant_email'] === 'houseofdogdigiuseppe@outlook.it' && $c['mail_from_address'] === 'noreply@thehouseofdog.it'
+    && $c['mail_mode'] === 'mail' && $c['site_url'] === 'https://www.thehouseofdog.it');
+check('email: a capo tolti dal nome del mittente', !str_contains($c['mail_from_name'], "\n") && !str_contains($c['mail_from_name'], "\r"));
+check('email: modalità OFF e File accettate', hodbook_config_normalize(['mail_mode' => 'OFF'])['mail_mode'] === 'off' && hodbook_config_normalize(['mail_mode' => ' File '])['mail_mode'] === 'file');
+check('telefono mostrato: +39 377 087 6017 dal numero WhatsApp', hodbook_phone_display($def) === '+39 377 087 6017');
+check('telefono mostrato: contact_phone_display ha la precedenza', hodbook_phone_display(hodbook_config_normalize(['contact_phone_display' => '080 123 4567'])) === '080 123 4567');
+check('telefono mostrato: numero estero', hodbook_phone_display(hodbook_config_normalize(['whatsapp_number' => '4915112345678'])) === '+4915112345678');
 
 /* =================================================================== */
 section('IBAN, BIC, importi');
@@ -257,13 +348,16 @@ check('estrazione: doppioni rimossi', hodbook_reference_extract('HOD7K3F9Q HOD7K
 
 /* =================================================================== */
 section('Validazione del modulo');
-$good = ['nome' => ' Maria ', 'cognome' => "D\u{2019}Angelo-Rossi", 'email' => 'Maria.Rossi@Example.COM', 'telefono' => '+39 333.123-4567', 'termini' => '1', 'tipo' => 'maltese'];
+$good = ['nome' => ' Maria ', 'cognome' => "D\u{2019}Angelo-Rossi", 'email' => 'Maria.Rossi@Example.COM', 'telefono' => '+39 333.123-4567',
+    'residenza' => "  Via San Michele, 4/B\r\n  70022   Altamura (BA)  ", 'codice_fiscale' => ' rss mra 80a01 h501u ', 'termini' => '1', 'tipo' => 'maltese'];
 [$d, $errs] = hodbook_validate_booking_form($good, $CFG['products']);
 check('dati validi accettati', $errs === [], json_encode($errs, JSON_UNESCAPED_UNICODE));
 check('nome ripulito', $d['first_name'] === 'Maria');
 check('apostrofo tipografico normalizzato', $d['last_name'] === "D'Angelo-Rossi");
 check('email in minuscolo', $d['email'] === 'maria.rossi@example.com');
 check('telefono normalizzato', $d['phone'] === '+393331234567');
+check('residenza su una riga, spazi compressi', $d['residence'] === 'Via San Michele, 4/B 70022 Altamura (BA)', (string)$d['residence']);
+check('codice fiscale senza spazi e maiuscolo', $d['tax_code'] === CF_OK);
 check('prodotto', $d['product_key'] === 'maltese');
 $bad = function (array $over) use ($good): array {
     return hodbook_validate_booking_form(array_merge($good, $over), hodbook_config()['products'])[1];
@@ -284,9 +378,60 @@ check('telefono di 16 cifre rifiutato', isset($bad(['telefono' => '1234567890123
 check('telefono con lettere rifiutato', isset($bad(['telefono' => '333 abc 4567'])['telefono']));
 check('telefono con doppio + rifiutato', isset($bad(['telefono' => '++393331234567'])['telefono']));
 check('telefono 6 cifre accettato', !isset($bad(['telefono' => '123456'])['telefono']));
+check('telefono mancante rifiutato', isset($bad(['telefono' => ''])['telefono']));
 check('condizioni non accettate rifiutate', isset($bad(['termini' => ''])['termini']));
 check('prodotto sconosciuto rifiutato', isset($bad(['tipo' => 'gatto'])['tipo']));
 check('UTF-8 non valido rifiutato', isset($bad(['nome' => "Mar\xC3\x28a"])['nome']));
+check('email con virgola o virgolette rifiutata (finirebbe in un\'intestazione)', isset($bad(['email' => 'a,b@example.com'])['email']) && isset($bad(['email' => '"a b"@example.com'])['email']));
+check('email con apostrofo accettata', !isset($bad(['email' => "o'brien@example.com"])['email']));
+
+/* Residenza */
+$res = static fn(string $v): array => hodbook_validate_residence($v);
+check('residenza: indirizzo tipico', $res('Via Roma 12, 70022 Altamura (BA)') === ['Via Roma 12, 70022 Altamura (BA)', null]);
+check('residenza: a capo e spazi diventano uno spazio', $res("Via Roma 12\n\n70022    Altamura") === ['Via Roma 12 70022 Altamura', null]);
+check('residenza: segni ammessi . \' ’ / - ( ) °', $res("P.zza dell'Unità d\u{2019}Italia 3/A - int. 2 (piano 1°), 00100 Roma")[1] === null);
+check('residenza: lettere accentate e straniere', $res('Straße München 5, 80331 München')[1] === null && $res('Via Niccolò 9, Forlì')[1] === null);
+check('residenza: vuota rifiutata', $res('   ')[0] === null && $res('')[1] === 'Inserisci la residenza.');
+check('residenza: meno di 10 caratteri rifiutata', $res('Via 1 Bari')[0] !== null && $res('Via 1 Bar')[0] === null);
+check('residenza: 200 caratteri accettati, 201 rifiutati', $res(str_repeat('a', 199) . '1')[1] === null && $res(str_repeat('a', 200) . '1')[0] === null);
+check('residenza: senza numeri rifiutata', $res('Via Roma, Altamura')[0] === null);
+check('residenza: senza lettere rifiutata', $res('12345, 67890 (00)')[0] === null);
+check('residenza: simboli non ammessi rifiutati', $res('Via Roma 12; Altamura')[0] === null && $res('Via <b>Roma</b> 12')[0] === null
+    && $res('Via Roma 12 #3 Bari')[0] === null && $res('Via Roma 12, 70022 Altamura & Co')[0] === null);
+check('residenza: cifre non latine rifiutate', $res("Via Roma \u{0661}\u{0662}, Altamura")[0] === null);
+check('residenza nel modulo: errore per campo', isset($bad(['residenza' => 'Bari'])['residenza']));
+
+/* Codice fiscale */
+$cfValid = [
+    CF_OK               => 'esempio pubblicato (uomo)',
+    'CCCFBA85D03L219P'  => 'esempio pubblicato',
+    CF_OK_2             => 'donna, giorno + 40',
+    'BNCLRA92M71A662H'  => 'donna, giorno 71 (limite)',
+    'CCCFBA85D03L21VE'  => 'omocodia su una cifra',
+    'RSSMRA80A01H5LMX'  => 'omocodia su due cifre',
+    'RSSMRAULA01H501C'  => 'omocodia sull\'anno',
+    'RSSMRAULALMHRLMD'  => 'omocodia su tutte e sette le cifre',
+];
+foreach ($cfValid as $code => $what) {
+    check('codice fiscale valido: ' . $code . ' (' . $what . ')', hodbook_tax_code_valid($code) && hodbook_validate_tax_code($code) === [$code, null]);
+}
+check('codice fiscale minuscolo e con spazi normalizzato', hodbook_validate_tax_code("  ccc fba 85d03\tl219p ") === ['CCCFBA85D03L219P', null]);
+$cfMsg = 'Codice fiscale non valido: controlla i 16 caratteri.';
+$cfInvalid = [
+    'RSSMRA80A01H501X'  => 'carattere di controllo sbagliato',
+    'RSSMRA80A01H501'   => '15 caratteri',
+    'RSSMRA80A01H501UU' => '17 caratteri',
+    '03933680401'       => 'partita IVA / codice fiscale di società (11 cifre)',
+    'RSSMRA80Z01H501U'  => 'mese inesistente',
+    'RSSMRA8AA01H501U'  => 'lettera non di omocodia in una posizione numerica',
+    'RSSMRA80A32H501C'  => 'giorno 32 (carattere di controllo corretto)',
+    'RSSMRA80A00H501?'  => 'carattere non ammesso',
+];
+foreach ($cfInvalid as $code => $what) {
+    check('codice fiscale rifiutato: ' . $what, !hodbook_tax_code_valid($code) && hodbook_validate_tax_code($code) === [null, $cfMsg]);
+}
+check('codice fiscale vuoto: messaggio dedicato', hodbook_validate_tax_code('') === [null, 'Inserisci il codice fiscale.']);
+check('codice fiscale nel modulo: errore per campo', ($bad(['codice_fiscale' => 'RSSMRA80A01H501X'])['codice_fiscale'] ?? '') === $cfMsg);
 
 /* =================================================================== */
 section('CSRF senza sessione');
@@ -341,8 +486,10 @@ check('dopo un\'ora di nuovo consentito', hodbook_rate_limit($DB, $bucket, 8, 36
 
 /* =================================================================== */
 section('Creazione della prenotazione');
-[$token, $b] = hodbook_booking_create($DB, $CFG, 'barboncino', ['first_name' => 'Maria', 'last_name' => 'Rossi', 'email' => 'maria@example.com', 'phone' => '+393331234567'], $now);
+[$token, $b] = hodbook_booking_create($DB, $CFG, 'barboncino', customer(), $now);
 check('prenotazione in attesa', $b['status'] === 'pending' && $b['received_cents'] === null && $b['paid_at'] === null && $b['paid_tx_id'] === null);
+check('dati del cliente salvati (telefono, residenza, codice fiscale)', $b['phone'] === '+393331234567' && $b['residence'] === 'Via Roma 12, 70022 Altamura (BA)'
+    && $b['tax_code'] === CF_OK && $b['customer_email_sent_at'] === null);
 check('nome prodotto e caparra copiati', $b['product_key'] === 'barboncino' && $b['product_name'] === 'Caparra Barboncino Toy' && (int)$b['amount_cents'] === 55000 && $b['currency'] === 'EUR');
 check('accettazione delle condizioni registrata', (int)$b['terms_accepted_at'] === $now);
 check('token 64 esadecimali', hodbook_valid_token_format($token));
@@ -355,19 +502,170 @@ $cfgChanged = $CFG;
 $cfgChanged['products']['barboncino'] = ['name' => 'Caparra Barboncino Toy NUOVA', 'amount_cents' => 99900];
 new_booking();
 check('cambiare la config non altera le prenotazioni esistenti', ($row = bk($b)) && $row['product_name'] === 'Caparra Barboncino Toy' && (int)$row['amount_cents'] === 55000);
-[, $b2] = hodbook_booking_create($DB, $cfgChanged, 'barboncino', ['first_name' => 'Luca', 'last_name' => 'Bianchi', 'email' => 'l@example.com', 'phone' => '123456'], $now);
+[, $b2] = hodbook_booking_create($DB, $cfgChanged, 'barboncino', customer(['first_name' => 'Luca', 'email' => 'l@example.com']), $now);
 check('le nuove prenotazioni usano la config nuova', (int)$b2['amount_cents'] === 99900);
 $queue = [(string)$b['reference'], (string)$b['reference'], 'HODZZZZZ2'];
-[, $b3] = hodbook_booking_create($DB, $CFG, 'maltese', ['first_name' => 'Anna', 'last_name' => 'Verdi', 'email' => 'a@example.com', 'phone' => '123456'], $now,
+[, $b3] = hodbook_booking_create($DB, $CFG, 'maltese', customer(['first_name' => 'Anna', 'email' => 'a@example.com']), $now,
     static function () use (&$queue): string { return array_shift($queue); });
 check('collisione del codice: si riprova con un altro', $b3['reference'] === 'HODZZZZZ2' && $queue === []);
 $threw = false;
 try {
-    hodbook_booking_create($DB, $CFG, 'gatto', ['first_name' => 'A', 'last_name' => 'B', 'email' => 'c', 'phone' => 'd'], $now);
+    hodbook_booking_create($DB, $CFG, 'gatto', customer(), $now);
 } catch (InvalidArgumentException) {
     $threw = true;
 }
 check('prodotto sconosciuto: eccezione', $threw);
+
+/* =================================================================== */
+section('Limite di prenotazioni per email');
+$limitMail = 'limite@example.com';
+$made = [];
+for ($i = 0; $i < 3; $i++) {
+    $made[] = hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => $limitMail]), $now);
+}
+check('3 prenotazioni con la stessa email nelle 24 ore: consentite', count(array_filter($made)) === 3);
+$before = count_rows('SELECT COUNT(*) FROM bookings');
+$fourth = hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => 'LIMITE@Example.com']), $now);
+check('4ª prenotazione (email con maiuscole diverse): rifiutata, nulla creato', $fourth === null && count_rows('SELECT COUNT(*) FROM bookings') === $before);
+check('altra email: consentita', hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => 'altra@example.com']), $now) !== null);
+$DB->prepare('UPDATE bookings SET created_at = :t WHERE id = :id')->execute([':t' => $now - 86401, ':id' => $made[0][1]['id']]);
+check('dopo 24 ore la prenotazione più vecchia non conta più', hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => $limitMail]), $now) !== null);
+check('...e il limite torna subito pieno', hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => $limitMail]), $now) === null);
+
+/* =================================================================== */
+section('Email: costruzione del messaggio e protezione delle intestazioni');
+$built = hodbook_mail_build($CFG, ['to' => 'cliente@example.com', 'reply_to' => TEST_MERCHANT,
+    'subject' => 'Abbiamo ricevuto la tua richiesta di prenotazione (HOD7K3F9Q) - caparra già pronta, città: Forlì', 'body' => "Riga 1 àèìòù €\nRiga 2 " . str_repeat('lunga ', 40)], $now);
+check('From sul dominio del sito con nome tra virgolette', $built['headers']['From'] === '"House of Dogs" <noreply@thehouseofdog.it>');
+check('Reply-To, MIME, testo UTF-8, base64', $built['headers']['Reply-To'] === TEST_MERCHANT && $built['headers']['MIME-Version'] === '1.0'
+    && $built['headers']['Content-Type'] === 'text/plain; charset=UTF-8' && $built['headers']['Content-Transfer-Encoding'] === 'base64');
+check('Date in formato RFC 2822', (bool)preg_match('/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} [+\-]\d{4}$/', $built['headers']['Date']));
+check('Message-ID sul dominio del mittente', (bool)preg_match('/^<[a-f0-9]{24}\.\d+@thehouseofdog\.it>$/', $built['headers']['Message-ID']));
+check('mittente di busta -f solo con indirizzo "stretto"', $built['params'] === '-fnoreply@thehouseofdog.it'
+    && hodbook_mail_build(array_merge($CFG, ['mail_from_address' => "o'brien@example.com"]), ['to' => 'a@example.com', 'subject' => 'x', 'body' => 'y'], $now)['params'] === '');
+$lines = explode("\r\n", $built['body']);
+check('corpo base64 a righe di massimo 76 caratteri', max(array_map('strlen', $lines)) <= 76 && count($lines) > 1);
+check('corpo decodificato identico, a capo CRLF', base64_decode(implode('', $lines)) === "Riga 1 àèìòù €\r\nRiga 2 " . str_repeat('lunga ', 40));
+$words = preg_split('/\r\n /', $built['subject']) ?: [];
+check('oggetto in encoded-word UTF-8 di massimo 75 caratteri', count($words) > 1 && max(array_map('strlen', $words)) <= 75
+    && count(array_filter($words, static fn(string $w): bool => (bool)preg_match('/^=\?UTF-8\?B\?[A-Za-z0-9+\/=]+\?=$/', $w))) === count($words));
+check('oggetto decodificato identico', mime_decode($built['subject']) === 'Abbiamo ricevuto la tua richiesta di prenotazione (HOD7K3F9Q) - caparra già pronta, città: Forlì');
+$utfName = hodbook_mail_build(array_merge($CFG, ['mail_from_name' => "Casa dei Cuccioli \u{2013} Altamura"]), ['to' => 'a@example.com', 'subject' => 'x', 'body' => 'y'], $now);
+check('nome del mittente non ASCII codificato', str_starts_with($utfName['headers']['From'], '=?UTF-8?B?') && str_ends_with($utfName['headers']['From'], ' <noreply@thehouseofdog.it>')
+    && mime_decode(substr($utfName['headers']['From'], 0, (int)strrpos($utfName['headers']['From'], ' <'))) === "Casa dei Cuccioli \u{2013} Altamura");
+$quoted = hodbook_mail_build(array_merge($CFG, ['mail_from_name' => 'House "of" Dogs']), ['to' => 'a@example.com', 'subject' => 'x', 'body' => 'y'], $now);
+check('virgolette nel nome del mittente protette', $quoted['headers']['From'] === '"House \"of\" Dogs" <noreply@thehouseofdog.it>');
+$rejects = 0;
+foreach (["a@example.com\r\nBcc: evil@example.com", "a@example.com\nBcc: evil@example.com", 'a@example.com, evil@example.com', 'Evil <evil@example.com>', ''] as $badTo) {
+    foreach (['to', 'reply_to'] as $field) {
+        try {
+            hodbook_mail_build($CFG, array_merge(['to' => 'ok@example.com', 'subject' => 'x', 'body' => 'y'], [$field => $badTo === '' && $field === 'reply_to' ? 'x' : $badTo]), $now);
+        } catch (InvalidArgumentException) {
+            $rejects++;
+        }
+    }
+}
+check('destinatario o Reply-To con a capo, virgole o nomi: messaggio rifiutato', $rejects === 10, (string)$rejects);
+$captured = [];
+$fakeMail = static function (...$args) use (&$captured): bool {
+    $captured = $args;
+    return true;
+};
+check('trasporto mail(): argomenti nel formato di mail() con -f', hodbook_mail_transport_mail($built, $fakeMail) && count($captured) === 5
+    && $captured[0] === 'cliente@example.com' && $captured[1] === $built['subject'] && $captured[2] === $built['body']
+    && is_array($captured[3]) && !isset($captured[3]['To']) && !isset($captured[3]['Subject']) && $captured[4] === '-fnoreply@thehouseofdog.it');
+$noF = $built;
+$noF['params'] = '';
+check('trasporto mail(): senza -f quando il mittente non è "stretto"', hodbook_mail_transport_mail($noF, $fakeMail) && count($captured) === 4);
+check('trasporto mail(): mail() che rifiuta = false', !hodbook_mail_transport_mail($built, static fn(...$a): bool => false));
+
+/* =================================================================== */
+section('Email della prenotazione (modalità file)');
+$customerData = customer(['first_name' => 'Giulia', 'last_name' => "D'Amico", 'email' => 'giulia.damico@example.com', 'phone' => '+393401112233',
+    'residence' => 'Corso Vittorio Emanuele 101, 70122 Bari (BA)', 'tax_code' => CF_OK_2]);
+[$mailToken, $mb] = hodbook_booking_create($DB, $CFG, 'bassotto-arlecchino', $customerData, $now);
+$ref = (string)$mb['reference'];
+$sent = hodbook_booking_send_emails($CFG, $mb, $mailToken, $now, $DB);
+$files = outbox($tmp, $ref);
+check('due email consegnate', $sent === ['merchant' => true, 'customer' => true]);
+check('esattamente due file .eml in data/outbox per la prenotazione', count($files) === 2, (string)count($files));
+check('invio registrato nella prenotazione', (int)bk($mb)['customer_email_sent_at'] === $now);
+$merchantFile = array_values(array_filter($files, static fn(string $f): bool => str_contains($f, '-esercente-')))[0] ?? '';
+$customerFile = array_values(array_filter($files, static fn(string $f): bool => str_contains($f, '-cliente-')))[0] ?? '';
+$m = eml((string)@file_get_contents($merchantFile));
+$cu = eml((string)@file_get_contents($customerFile));
+$link = TEST_SITE_URL . '/prenotazione.php?c=' . $mailToken;
+check('esercente: To, Reply-To = cliente, From', hdr($m, 'To') === TEST_MERCHANT && hdr($m, 'Reply-To') === 'giulia.damico@example.com'
+    && hdr($m, 'From') === '"House of Dogs" <noreply@thehouseofdog.it>');
+check('esercente: oggetto con prodotto, nome e codice', mime_decode(hdr($m, 'Subject')) === "Nuova richiesta di prenotazione: Caparra Bassotto Kaninchen Arlecchino - Giulia D'Amico ($ref)");
+check('esercente: tutti e sei i dati del cliente', str_contains($m['body'], "Nome: Giulia\r\n") && str_contains($m['body'], "Cognome: D'Amico\r\n")
+    && str_contains($m['body'], "Email: giulia.damico@example.com\r\nTelefono: +393401112233\r\n")
+    && str_contains($m['body'], "Residenza: Corso Vittorio Emanuele 101, 70122 Bari (BA)\r\n") && str_contains($m['body'], 'Codice fiscale: ' . CF_OK_2 . "\r\n"));
+check('esercente: caparra, codice, date, link e nota sui bonifici istantanei', str_contains($m['body'], "Cucciolo: Caparra Bassotto Kaninchen Arlecchino\r\nCaparra: 550,00 €\r\nCodice di prenotazione (causale): $ref\r\n")
+    && str_contains($m['body'], 'Condizioni di vendita accettate il: ' . date('d/m/Y H:i', $now)) && str_contains($m['body'], 'Richiesta inviata il: ' . date('d/m/Y H:i', $now))
+    && str_contains($m['body'], "Pagina della prenotazione (stato del bonifico):\r\n" . $link . "\r\n")
+    && str_contains($m['body'], 'Al cliente abbiamo indicato le coordinate bancarie e che sono accettati solo bonifici istantanei.'));
+check('cliente: To = cliente, Reply-To = esercente', hdr($cu, 'To') === 'giulia.damico@example.com' && hdr($cu, 'Reply-To') === TEST_MERCHANT);
+check('cliente: oggetto con il codice', mime_decode(hdr($cu, 'Subject')) === "Abbiamo ricevuto la tua richiesta di prenotazione ($ref)");
+check('cliente: saluto e riepilogo', str_starts_with($cu['body'], "Ciao Giulia,\r\n\r\nabbiamo ricevuto la tua richiesta di prenotazione. Ecco il riepilogo.\r\n")
+    && str_contains($cu['body'], "Codice di prenotazione: $ref\r\n"));
+check('cliente: dati per il bonifico con IBAN a gruppi, BIC, importo e causale', str_contains($cu['body'],
+    "DATI PER IL BONIFICO\r\nIntestatario: TITOLARE DI PROVA\r\nIBAN: IT60 X054 2811 1010 0000 0123 456\r\nBIC: REVOLT21\r\nBanca: Revolut\r\nImporto: 550,00 €\r\nCausale: $ref\r\n"));
+check('cliente: regola dei bonifici istantanei, testuale', str_contains($cu['body'], "IMPORTANTE\r\nNon sono accettati bonifici ordinari: la caparra va versata solo con bonifico istantaneo.\r\nScrivi nella causale solo il codice di prenotazione, senza altro testo.\r\n"));
+check('cliente: link assoluto su site_url, condizioni, contatti, firma', str_contains($cu['body'], "da questa pagina:\r\n" . $link . "\r\n")
+    && str_contains($cu['body'], "Condizioni di vendita:\r\n" . TEST_SITE_URL . "/termini.php\r\n")
+    && str_contains($cu['body'], 'scrivici su WhatsApp al +39 377 087 6017.') && str_ends_with($cu['body'], "The House Of Dog\r\n\r\n"));
+check('cliente: niente dati che non lo riguardano', !str_contains($cu['body'], CF_OK_2) && !str_contains($cu['body'], 'Residenza'));
+$noBic = $CFG;
+$noBic['bank_bic'] = '';
+[, $noBicCustomer] = hodbook_booking_messages($noBic, $mb, $mailToken);
+check('cliente: riga BIC solo se configurato', !str_contains($noBicCustomer['body'], 'BIC:') && str_contains($noBicCustomer['body'], "IBAN: IT60 X054 2811 1010 0000 0123 456\nBanca: Revolut\n"));
+
+/* Tentativo di aggiungere intestazioni attraverso il nome (il modulo lo rifiuterebbe: qui si prova il livello email). */
+[$injToken, $inj] = hodbook_booking_create($DB, $CFG, 'maltese', customer(['first_name' => "Mario\r\nBcc: evil@example.com", 'last_name' => "Rossi\nX-Spam: 1"]), $now);
+hodbook_booking_send_emails($CFG, $inj, $injToken, $now, $DB);
+$injFiles = outbox($tmp, (string)$inj['reference']);
+$injectionFound = false;
+foreach ($injFiles as $f) {
+    $msg = eml((string)file_get_contents($f));
+    $injectionFound = $injectionFound || isset($msg['headers']['bcc']) || isset($msg['headers']['x-spam'])
+        || (bool)preg_match('/^(Bcc|X-Spam):/mi', $msg['head']);
+}
+$injMerchant = array_values(array_filter($injFiles, static fn(string $f): bool => str_contains($f, '-esercente-')))[0] ?? '';
+$injSubject = mime_decode(hdr(eml((string)@file_get_contents($injMerchant)), 'Subject'));
+check('a capo nel nome: nessuna intestazione aggiunta (Bcc, X-Spam)', count($injFiles) === 2 && !$injectionFound);
+check('a capo nel nome: restano solo spazi nell\'oggetto', $injSubject !== '' && !preg_match('/[\r\n]/', $injSubject) && str_contains($injSubject, 'Mario Bcc: evil@example.com'));
+
+/* Modalità "off": nessun invio, nessun file, nessuna registrazione */
+$offCfg = array_merge($CFG, ['mail_mode' => 'off']);
+[$offToken, $off] = hodbook_booking_create($DB, $offCfg, 'maltese', customer(), $now);
+$beforeFiles = count(outbox($tmp));
+check('modalità off: nessuna email', hodbook_booking_send_emails($offCfg, $off, $offToken, $now, $DB) === ['merchant' => false, 'customer' => false]
+    && count(outbox($tmp)) === $beforeFiles && bk($off)['customer_email_sent_at'] === null);
+
+/* Trasporto che fallisce: nessuna eccezione, prenotazione intatta, una riga di log senza dati personali */
+$logBefore = (string)@file_get_contents(HODBOOK_DATA_DIR . '/prenotazioni.log');
+[$failToken, $failBooking] = hodbook_booking_create($DB, $CFG, 'maltese', customer(['first_name' => 'Ugo', 'email' => 'ugo.fallito@example.com']), $now);
+$threw = false;
+try {
+    $res2 = hodbook_booking_send_emails($CFG, $failBooking, $failToken, $now, $DB, static function (array $built): bool {
+        throw new RuntimeException('server SMTP irraggiungibile');
+    });
+} catch (Throwable) {
+    $threw = true;
+}
+$logNew = substr((string)@file_get_contents(HODBOOK_DATA_DIR . '/prenotazioni.log'), strlen($logBefore));
+check('trasporto in errore: nessuna eccezione, entrambe non inviate', !$threw && ($res2 ?? null) === ['merchant' => false, 'customer' => false]);
+check('trasporto in errore: prenotazione intatta, invio non registrato', ($row = bk($failBooking)) !== null && $row['status'] === 'pending' && $row['customer_email_sent_at'] === null);
+check('trasporto in errore: una riga di log con id e quali email, senza dati personali', substr_count($logNew, "\n") === 1
+    && str_contains($logNew, 'email NON inviata per la prenotazione #' . $failBooking['id']) && str_contains($logNew, 'esercente') && str_contains($logNew, 'cliente')
+    && !str_contains($logNew, 'ugo.fallito') && !str_contains($logNew, 'Ugo') && !str_contains($logNew, 'SMTP'), trim($logNew));
+$res3 = hodbook_booking_send_emails($CFG, $failBooking, $failToken, $now, $DB, static fn(array $built): bool => $built['to'] === TEST_MERCHANT);
+check('trasporto che rifiuta solo il cliente: esercente inviata, cliente no', $res3 === ['merchant' => true, 'customer' => false] && bk($failBooking)['customer_email_sent_at'] === null);
+$blocked = array_merge($CFG, ['merchant_email' => 'non-valida']);
+check('indirizzo esercente non valido in config: torna al predefinito', hodbook_config_normalize(['merchant_email' => 'non-valida'])['merchant_email'] === 'houseofdogdigiuseppe@outlook.it');
+check('indirizzo non valido arrivato al livello email (To e Reply-To): nessuna eccezione, nessun invio', hodbook_booking_send_emails($blocked, $failBooking, $failToken, $now, null, static fn(array $b): bool => true)
+    === ['merchant' => false, 'customer' => false]);
 
 /* =================================================================== */
 section('Firma e timestamp dei webhook Revolut');
@@ -713,13 +1011,25 @@ if ($withHttp) {
         check('GET con tipo -> modulo con nome prodotto e caparra', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"')
             && str_contains($r['body'], 'Caparra Barboncino Toy') && str_contains($r['body'], '550,00 €'));
         check('modulo: campi, honeypot, tipo e token', str_contains($r['body'], 'name="nome"') && str_contains($r['body'], 'name="cognome"') && str_contains($r['body'], 'name="email"')
-            && str_contains($r['body'], 'name="telefono"') && str_contains($r['body'], 'name="sito_web"') && str_contains($r['body'], 'name="tipo" value="barboncino"') && $formToken !== '');
+            && str_contains($r['body'], 'name="telefono"') && str_contains($r['body'], 'name="residenza"') && str_contains($r['body'], 'name="codice_fiscale"')
+            && str_contains($r['body'], 'name="sito_web"') && str_contains($r['body'], 'name="tipo" value="barboncino"') && $formToken !== '');
+        $order = array_map(static fn(string $l): int|false => strpos($r['body'], '<label for="f-' . $l . '"'), ['nome', 'cognome', 'email', 'telefono', 'residenza', 'codice_fiscale']);
+        check('modulo: ordine Nome, Cognome, Email, Telefono, Residenza, Codice fiscale', !in_array(false, $order, true) && $order === array_values(array_unique($order)) && $order == (static function (array $o): array { sort($o); return $o; })($order));
+        check('modulo: Telefono presente e obbligatorio', (bool)preg_match('#<input id="f-telefono" name="telefono" value="" required[^>]*type="tel"#', $r['body']) && str_contains($r['body'], '>Telefono <span'));
+        check('modulo: Residenza in textarea a 2 righe con suggerimento', (bool)preg_match('#<textarea id="f-residenza" name="residenza" required[^>]*rows="2"[^>]*maxlength="200"#', $r['body'])
+            && str_contains($r['body'], '>Via e numero civico, CAP, città e provincia</p>'));
+        check('modulo: Codice fiscale con autocapitalize, autocomplete off, spellcheck off, maxlength 16',
+            (bool)preg_match('#<input id="f-codice_fiscale" name="codice_fiscale" value="" required[^>]*maxlength="16" autocapitalize="characters" autocomplete="off" spellcheck="false"#', $r['body']));
         check('modulo: condizioni in nuova scheda e informativa', (bool)preg_match('#<input[^>]+name="termini"[^>]+required#', $r['body'])
             && str_contains($r['body'], 'Ho letto e accetto le <a href="termini.php" target="_blank" rel="noopener">Condizioni di vendita</a>') && str_contains($r['body'], 'href="privacy.php"'));
-        check('modulo: avviso caparra testuale', str_contains($r['body'], '<p class="warn">La caparra non è rimborsabile in caso di rinuncia. Prima del pagamento ti confermiamo sempre per iscritto cucciolo, prezzo totale, documenti e consegna.</p>'));
+        check('modulo: avviso caparra testuale e regola dei bonifici istantanei nello stesso riquadro', str_contains($r['body'],
+            '<div class="warn"><p>La caparra non è rimborsabile in caso di rinuncia. Prima del pagamento ti confermiamo sempre per iscritto cucciolo, prezzo totale, documenti e consegna.</p>'
+            . '<p class="mt-2">Non sono accettati bonifici ordinari: la caparra va versata solo con bonifico istantaneo.</p></div>'));
+        check('modulo: regola prima del bottone', strpos($r['body'], 'Non sono accettati bonifici ordinari') < strpos($r['body'], 'id="prenota-submit"'));
         check('modulo: testo del bottone', str_contains($r['body'], '>Prenota e vedi i dati per il bonifico</button>'));
 
-        $goodPost = ['tipo' => 'barboncino', 'token' => $formToken, 'sito_web' => '', 'nome' => 'Maria', 'cognome' => "D'Angelo", 'email' => 'maria@example.com', 'telefono' => '333 123 4567', 'termini' => '1'];
+        $goodPost = ['tipo' => 'barboncino', 'token' => $formToken, 'sito_web' => '', 'nome' => 'Maria', 'cognome' => "D'Angelo", 'email' => 'maria.http@example.com',
+            'telefono' => '333 123 4567', 'residenza' => "Via Roma 12\r\n70022 Altamura (BA)", 'codice_fiscale' => 'rssmra80a01h501u', 'termini' => '1'];
         $countBookings = static fn(): int => count_rows('SELECT COUNT(*) FROM bookings');
         $n0 = $countBookings();
 
@@ -728,11 +1038,16 @@ if ($withHttp) {
         check('...con lo stesso token e i dati conservati', $tokenFrom($r['body']) === $formToken && str_contains($r['body'], 'value="D&apos;Angelo"'));
         usleep(2200000);
 
-        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['nome' => 'M', 'cognome' => 'Rossi<script>', 'email' => 'no', 'telefono' => '12', 'termini' => '']))]);
+        $outboxBefore = count(outbox($tmp));
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['nome' => 'M', 'cognome' => 'Rossi<script>', 'email' => 'no', 'telefono' => '12',
+            'residenza' => 'Bari <b>', 'codice_fiscale' => 'RSSMRA80A01H501X', 'termini' => '']))]);
         check('dati non validi -> errori per campo', $r['code'] === 200 && str_contains($r['body'], 'Il nome deve avere almeno 2 lettere.') && str_contains($r['body'], 'Il cognome può contenere solo lettere')
             && str_contains($r['body'], 'L&apos;email non sembra valida') && str_contains($r['body'], 'Il numero di telefono non sembra valido') && str_contains($r['body'], 'Per prenotare devi accettare le Condizioni di vendita.'));
-        check('valori conservati ed escapati', str_contains($r['body'], 'value="Rossi&lt;script&gt;"') && !str_contains($r['body'], 'Rossi<script>') && str_contains($r['body'], 'aria-invalid="true"'));
-        check('nessuna prenotazione creata', $countBookings() === $n0);
+        check('codice fiscale non valido -> messaggio richiesto', str_contains($r['body'], '<p id="f-codice_fiscale-err" class="err">Codice fiscale non valido: controlla i 16 caratteri.</p>'));
+        check('residenza non valida -> errore sul campo', str_contains($r['body'], 'id="f-residenza-err"') && str_contains($r['body'], 'Controlla i 7 campi evidenziati.'));
+        check('valori conservati ed escapati (anche nella textarea)', str_contains($r['body'], 'value="Rossi&lt;script&gt;"') && !str_contains($r['body'], 'Rossi<script>')
+            && str_contains($r['body'], '>Bari &lt;b&gt;</textarea>') && str_contains($r['body'], 'value="RSSMRA80A01H501X"') && str_contains($r['body'], 'aria-invalid="true"'));
+        check('nessuna prenotazione creata, nessuna email', $countBookings() === $n0 && count(outbox($tmp)) === $outboxBefore);
 
         $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['sito_web' => 'http://spam.example']))]);
         check('honeypot compilato -> messaggio generico, nessuna prenotazione', $r['code'] === 200 && str_contains($r['body'], 'Non è stato possibile completare la prenotazione') && $countBookings() === $n0);
@@ -750,6 +1065,18 @@ if ($withHttp) {
         check('POST valido -> 303 verso prenotazione.php?c=<token>', $r['code'] === 303 && (bool)preg_match('#^prenotazione\.php\?c=[a-f0-9]{64}$#', $location), 'HTTP ' . $r['code'] . ' ' . $location);
         check('una prenotazione creata', $countBookings() === $n0 + 1);
         $bookingToken = substr($location, -64);
+        $httpBooking = hodbook_booking_by_token($DB, $bookingToken);
+        $httpRef = (string)($httpBooking['reference'] ?? '');
+        $httpFiles = outbox($tmp, $httpRef);
+        check('POST valido: due file .eml nella cartella temporanea', $httpRef !== '' && count($httpFiles) === 2 && count(outbox($tmp)) === $outboxBefore + 2, (string)count($httpFiles));
+        $httpMerchant = eml((string)@file_get_contents(array_values(array_filter($httpFiles, static fn(string $f): bool => str_contains($f, '-esercente-')))[0] ?? ''));
+        $httpCustomer = eml((string)@file_get_contents(array_values(array_filter($httpFiles, static fn(string $f): bool => str_contains($f, '-cliente-')))[0] ?? ''));
+        check('POST valido: email all\'esercente con i sei dati del cliente', hdr($httpMerchant, 'To') === TEST_MERCHANT && hdr($httpMerchant, 'Reply-To') === 'maria.http@example.com'
+            && str_contains($httpMerchant['body'], "Nome: Maria\r\nCognome: D'Angelo\r\nEmail: maria.http@example.com\r\nTelefono: 3331234567\r\nResidenza: Via Roma 12 70022 Altamura (BA)\r\nCodice fiscale: " . CF_OK . "\r\n"));
+        check('POST valido: email al cliente con link assoluto su site_url (non sull\'host della richiesta)', hdr($httpCustomer, 'To') === 'maria.http@example.com'
+            && str_contains($httpCustomer['body'], TEST_SITE_URL . '/prenotazione.php?c=' . $bookingToken) && !str_contains($httpCustomer['body'], '127.0.0.1')
+            && !str_contains($httpMerchant['body'], '127.0.0.1'));
+        check('POST valido: invio registrato', $httpBooking !== null && $httpBooking['customer_email_sent_at'] !== null);
 
         /* --- prenotazione.php --- */
         $page = $base . '/' . $location;
@@ -762,18 +1089,25 @@ if ($withHttp) {
             && str_contains($r['body'], 'IT60 X054 2811 1010 0000 0123 456') && str_contains($r['body'], 'REVOLT21') && str_contains($r['body'], '>Revolut<'));
         check('Copia: IBAN senza spazi, importo 550,00, causale', str_contains($r['body'], 'data-copy="' . TEST_IBAN . '"') && str_contains($r['body'], 'data-copy="550,00"')
             && str_contains($r['body'], 'data-copy="' . $refMatch . '"') && str_contains($r['body'], '>Copia</button>'));
-        check('istruzione sulla causale (testuale) e bonifico istantaneo', str_contains($r['body'], 'Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.')
-            && str_contains($r['body'], 'bonifico istantaneo'));
+        check('istruzione sulla causale (testuale)', str_contains($r['body'], 'Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.'));
+        $rulePos = strpos($r['body'], '<p class="rule mt-4" id="regola-istantaneo">Non sono accettati bonifici ordinari: la caparra va versata solo con bonifico istantaneo.</p>');
+        check('regola dei bonifici istantanei, testuale, in evidenza sopra le coordinate', $rulePos !== false && $rulePos > strpos($r['body'], '>Dati per il bonifico</h2>')
+            && $rulePos < strpos($r['body'], 'TITOLARE DI PROVA') && $rulePos < strpos($r['body'], 'IT60 X054 2811 1010 0000 0123 456'));
+        check('spiegazione neutra subito dopo la regola, vecchio suggerimento rimosso', str_contains($r['body'], '</p><p class="mt-3 text-sm">Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.</p>')
+            && !str_contains($r['body'], 'Se la tua banca lo permette'));
+        check('riga sull\'email di riepilogo con indirizzo oscurato', str_contains($r['body'], 'Ti abbiamo inviato un\'email di riepilogo a <strong>m***@example.com</strong>. Se non la trovi controlla la posta indesiderata.'));
         check('link da salvare con Copia link', str_contains($r['body'], 'Salva il link di questa pagina') && str_contains($r['body'], '>Copia link</button>')
             && str_contains($r['body'], $base . '/prenotazione.php?c=' . $bookingToken));
         check('WhatsApp con prodotto e codice nel messaggio', str_contains($r['body'], 'Avvisaci su WhatsApp')
             && str_contains($r['body'], 'https://wa.me/393770876017?text=' . rawurlencode('Ciao! Ho prenotato sul sito: Caparra Barboncino Toy. Codice prenotazione: ' . $refMatch . '.')));
         check('link a termini, privacy e ritorno al sito', str_contains($r['body'], 'href="termini.php"') && str_contains($r['body'], 'href="privacy.php"') && str_contains($r['body'], '← Torna al sito'));
         check('script di supporto caricato', str_contains($r['body'], 'assets/js/prenota.js'));
-        check('nessun dato personale oltre al nome', !str_contains($r['body'], 'maria@example.com') && !str_contains($r['body'], '3331234567'));
+        check('nessun dato personale oltre al nome e all\'email oscurata', !str_contains($r['body'], 'maria.http@example.com') && !str_contains($r['body'], '3331234567')
+            && !str_contains($r['body'], CF_OK) && !str_contains($r['body'], 'Altamura (BA)'));
         check('intestazioni anche qui', $header($r, 'Referrer-Policy') === 'same-origin' && $header($r, 'X-Frame-Options') === 'DENY' && str_contains($header($r, 'Cache-Control'), 'no-store'));
         $stored = hodbook_booking_by_token($DB, $bookingToken);
-        check('salvata con dati normalizzati', $stored !== null && $stored['reference'] === $refMatch && $stored['phone'] === '3331234567' && $stored['last_name'] === "D'Angelo");
+        check('salvata con dati normalizzati', $stored !== null && $stored['reference'] === $refMatch && $stored['phone'] === '3331234567' && $stored['last_name'] === "D'Angelo"
+            && $stored['residence'] === 'Via Roma 12 70022 Altamura (BA)' && $stored['tax_code'] === CF_OK);
 
         $r = $http('GET', $page . '&format=json');
         check('stato JSON -> {"status":"pending"} senza dati personali', $r['code'] === 200 && trim($r['body']) === '{"status":"pending"}'
@@ -811,16 +1145,27 @@ if ($withHttp) {
         check('webhook oltre 64 KB -> 413', $r['code'] === 413);
         $log = (string)@file_get_contents($tmp . '/data/prenotazioni.log');
         check('log privato: eventi senza dati personali né segreti', str_contains($log, 'webhook processed evento=TransactionCreated tx=' . $txHttp) && str_contains($log, 'stato=paid')
-            && !str_contains($log, 'maria@example.com') && !str_contains($log, 'Maria') && !str_contains($log, $secretA) && !str_contains($log, 'D\'Angelo'));
+            && !str_contains($log, 'maria.http@example.com') && !str_contains($log, 'Maria') && !str_contains($log, $secretA) && !str_contains($log, 'D\'Angelo'));
 
-        /* --- limite di frequenza: finora 5 POST contati (troppo presto, errori, honeypot, token alterato, valido) --- */
+        /* --- limite per email: 3 prenotazioni già fatte (dal test) con lo stesso indirizzo nelle ultime 24 ore --- */
+        for ($i = 0; $i < 3; $i++) {
+            hodbook_booking_create_limited($DB, $CFG, 'maltese', customer(['email' => 'limite-http@example.com']), time());
+        }
+        $nLimit = $countBookings();
+        $outboxLimit = count(outbox($tmp));
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['email' => 'Limite-HTTP@example.com']))]);
+        check('4ª richiesta con la stessa email -> modulo con errore e link WhatsApp', $r['code'] === 200
+            && str_contains($r['body'], 'Hai già inviato più richieste con questa email. <a href="https://wa.me/393770876017?text=') && str_contains($r['body'], '">Scrivici su WhatsApp</a>.'));
+        check('4ª richiesta: nessuna prenotazione, nessuna email', $countBookings() === $nLimit && count(outbox($tmp)) === $outboxLimit);
+
+        /* --- limite di frequenza: finora 6 POST contati (troppo presto, errori, honeypot, token alterato, valido, limite email) --- */
         $codes = [];
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $codes[] = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['email' => 'no']))])['code'];
         }
-        check('limite: 8 POST l\'ora, il 9° -> 429', $codes === [200, 200, 200, 429], implode(',', $codes));
+        check('limite: 8 POST l\'ora, il 9° -> 429', $codes === [200, 200, 429], implode(',', $codes));
         $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost)]);
-        check('pagina 429 con WhatsApp e nessuna prenotazione', $r['code'] === 429 && str_contains($r['body'], 'Troppi tentativi') && str_contains($r['body'], 'https://wa.me/393770876017') && $countBookings() === $n0 + 1);
+        check('pagina 429 con WhatsApp e nessuna prenotazione', $r['code'] === 429 && str_contains($r['body'], 'Troppi tentativi') && str_contains($r['body'], 'https://wa.me/393770876017') && $countBookings() === $nLimit);
         $r = $http('GET', $base . '/prenota.php?tipo=maltese');
         check('il limite vale solo per gli invii: la pagina si apre', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"'));
 
@@ -844,6 +1189,31 @@ if ($withHttp) {
             'Revolut-Request-Timestamp: ' . $signed['Revolut-Request-Timestamp'], 'Revolut-Signature: ' . $signed['Revolut-Signature']]]);
         check('webhook senza segreto -> 503', $r['code'] === 503);
 
+        /* --- terza istanza: trasporto email che fallisce (data/outbox è un file, la cartella non si può creare) --- */
+        $tmp3 = $tmp . '/posta-guasta';
+        mkdir($tmp3 . '/config', 0700, true);
+        mkdir($tmp3 . '/data', 0700, true);
+        write_config($tmp3, $testConfig);
+        file_put_contents($tmp3 . '/data/outbox', 'non una cartella');
+        $srv3 = $servers[] = $startServer($tmp3);
+        $r = $http('GET', $srv3['base'] . '/prenota.php?tipo=maltipoo');
+        $secret3 = hodbook_read_app_secret($tmp3 . '/data/app-secret.php');
+        check('posta guasta: il modulo si apre', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"') && $secret3 !== null);
+        $r = $http('POST', $srv3['base'] . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['tipo' => 'maltipoo',
+            'token' => hodbook_form_token(time() - 10, (string)$secret3), 'email' => 'posta.guasta@example.com']))]);
+        $location3 = $header($r, 'Location');
+        check('posta guasta: prenotazione creata e redirect 303 lo stesso', $r['code'] === 303 && (bool)preg_match('#^prenotazione\.php\?c=[a-f0-9]{64}$#', $location3), 'HTTP ' . $r['code']);
+        $db3 = hodbook_db_open($tmp3 . '/data/prenotazioni.sqlite');
+        $b3 = hodbook_booking_by_token($db3, substr($location3, -64));
+        check('posta guasta: prenotazione salvata, invio non registrato, nessun file', $b3 !== null && $b3['customer_email_sent_at'] === null && !is_dir($tmp3 . '/data/outbox'));
+        $log3 = (string)@file_get_contents($tmp3 . '/data/prenotazioni.log');
+        check('posta guasta: una riga di log con id, senza dati personali', str_contains($log3, 'email NON inviata per la prenotazione #' . ($b3['id'] ?? '?') . ', modalità file: esercente (RuntimeException), cliente (RuntimeException)')
+            && !str_contains($log3, 'posta.guasta') && !str_contains($log3, 'Maria'), trim($log3));
+        $r = $http('GET', $srv3['base'] . '/' . $location3);
+        check('posta guasta: la pagina si apre senza promettere l\'email', $r['code'] === 200 && str_contains($r['body'], 'In attesa del bonifico') && !str_contains($r['body'], 'Ti abbiamo inviato'));
+        $b3 = null;
+        $db3 = null;
+
         $cookies = array_filter($allHeaders, static fn(string $h): bool => (bool)preg_match('/^Set-Cookie:/mi', $h));
         check('nessun Set-Cookie in ' . count($allHeaders) . ' risposte', $cookies === [] && count($allHeaders) > 30);
 
@@ -853,10 +1223,10 @@ if ($withHttp) {
                 proc_close($s['proc']);
             }
         }
-        $serverLog = (string)@file_get_contents($srv['log']) . (string)@file_get_contents($srv2['log']);
+        $serverLog = (string)@file_get_contents($srv['log']) . (string)@file_get_contents($srv2['log']) . (string)@file_get_contents($srv3['log']);
         check('server: nessun errore PHP', !preg_match('/PHP (Warning|Notice|Deprecated|Fatal|Parse)/', $serverLog), substr($serverLog, 0, 300));
-        $errLog2 = (string)@file_get_contents($tmp2 . '/data/php-errors.log');
-        check('seconda istanza: log errori PHP vuoto', trim($errLog2) === '', substr($errLog2, 0, 300));
+        $errLog23 = (string)@file_get_contents($tmp2 . '/data/php-errors.log') . (string)@file_get_contents($tmp3 . '/data/php-errors.log');
+        check('seconda e terza istanza: log errori PHP vuoti', trim($errLog23) === '', substr($errLog23, 0, 300));
     }
 }
 

@@ -43,7 +43,7 @@ ini_set('error_log', HODBOOK_DATA_DIR . '/php-errors.log');
 error_reporting(E_ALL);
 date_default_timezone_set('Europe/Rome');
 
-foreach (['validation', 'config', 'db', 'security', 'bookings', 'revolut', 'view'] as $hodbookLib) {
+foreach (['validation', 'config', 'db', 'security', 'bookings', 'revolut', 'mail', 'view'] as $hodbookLib) {
     require_once __DIR__ . '/lib/' . $hodbookLib . '.php';
 }
 unset($hodbookLib);

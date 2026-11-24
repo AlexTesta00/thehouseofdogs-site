@@ -52,4 +52,22 @@ return [
 
     /* true solo se il sito è dietro un proxy fidato che imposta X-Forwarded-For / X-Forwarded-Proto. */
     'trust_proxy_headers' => false,
+
+    /* Email inviate a ogni prenotazione: notifica con i dati del cliente a merchant_email (Reply-To: il cliente)
+       e riepilogo con i dati per il bonifico al cliente (Reply-To: merchant_email).
+       In produzione merchant_email si può cambiare con la variabile del repository BOOKING_MERCHANT_EMAIL. */
+    'merchant_email'    => 'houseofdogdigiuseppe@outlook.it',
+    'mail_from_address' => 'noreply@thehouseofdog.it',   /* mittente sul dominio del sito, come il modulo contatti */
+    'mail_from_name'    => 'House of Dogs',
+
+    /* "mail" = mail() di PHP (produzione); "file" = un file .eml per messaggio in data/outbox/ (anteprima locale e test,
+       dove mail() non funziona); "off" = nessuna email. */
+    'mail_mode' => 'mail',
+
+    /* Indirizzo pubblico del sito, senza slash finale: serve per i link assoluti nelle email
+       (mai ricavati dall'intestazione Host della richiesta). */
+    'site_url' => 'https://www.thehouseofdog.it',
+
+    /* Numero mostrato nell'email al cliente. Vuoto = whatsapp_number formattato (393770876017 -> +39 377 087 6017). */
+    'contact_phone_display' => '',
 ];

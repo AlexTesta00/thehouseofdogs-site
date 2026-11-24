@@ -25,6 +25,12 @@ function hodbook_config_defaults(): array
         'merchant_name'               => 'The House Of Dog',
         'timestamp_tolerance_seconds' => 300,
         'trust_proxy_headers'         => false,
+        'merchant_email'              => 'houseofdogdigiuseppe@outlook.it',
+        'mail_from_address'           => 'noreply@thehouseofdog.it',
+        'mail_from_name'              => 'House of Dogs',
+        'mail_mode'                   => 'mail',
+        'site_url'                    => 'https://www.thehouseofdog.it',
+        'contact_phone_display'       => '',
     ];
 }
 
@@ -118,7 +124,34 @@ function hodbook_config_normalize(array $user): array
     $out['timestamp_tolerance_seconds'] = min(3600, max(30, (int)$c['timestamp_tolerance_seconds']));
     $out['trust_proxy_headers'] = (bool)$c['trust_proxy_headers'];
 
+    /* Email: un indirizzo non valido torna al valore predefinito (mai un'intestazione costruita con dati sporchi). */
+    $d = hodbook_config_defaults();
+    foreach (['merchant_email', 'mail_from_address'] as $key) {
+        $email = is_string($c[$key]) ? trim($c[$key]) : '';
+        $out[$key] = hodbook_email_header_safe($email) ? $email : $d[$key];
+    }
+    $out['mail_from_name'] = hodbook_clean_text($c['mail_from_name'], 80) ?: $d['mail_from_name'];
+    $mode = is_string($c['mail_mode']) ? strtolower(trim($c['mail_mode'])) : '';
+    $out['mail_mode'] = in_array($mode, ['mail', 'file', 'off'], true) ? $mode : 'mail';
+    /* URL pubblico del sito per i link nelle email: mai ricavato dall'intestazione Host della richiesta. */
+    $url = is_string($c['site_url']) ? rtrim(trim($c['site_url']), '/') : '';
+    $out['site_url'] = preg_match('#^https?://[A-Za-z0-9.\-]+(:\d{1,5})?(/[A-Za-z0-9._~\-/]*)?\z#', $url) ? rtrim($url, '/') : $d['site_url'];
+    $out['contact_phone_display'] = hodbook_clean_text($c['contact_phone_display'], 40);
+
     return $out;
+}
+
+/** Numero di telefono da mostrare (email al cliente): contact_phone_display o, se vuoto, whatsapp_number formattato. */
+function hodbook_phone_display(array $cfg): string
+{
+    if ($cfg['contact_phone_display'] !== '') {
+        return $cfg['contact_phone_display'];
+    }
+    $n = $cfg['whatsapp_number'];
+    if (preg_match('/^39(\d{3})(\d{3})(\d{3,4})\z/', $n, $m)) {
+        return '+39 ' . $m[1] . ' ' . $m[2] . ' ' . $m[3];   /* 393770876017 -> +39 377 087 6017 */
+    }
+    return '+' . $n;
 }
 
 /** Banca configurata = intestatario presente e IBAN sintatticamente valido (mod-97). */
