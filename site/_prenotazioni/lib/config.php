@@ -41,12 +41,16 @@ function hodbook_config(): array
     if ($cfg !== null) {
         return $cfg;
     }
+    /* bank.php (nel repository) porta le coordinate bancarie; config.php (privato, generato dal deploy o
+       scritto a mano) si sovrappone e ha la precedenza. */
     $user = [];
-    $file = HODBOOK_CONFIG_DIR . '/config.php';
-    if (is_file($file)) {
-        $loaded = require $file;
-        if (is_array($loaded)) {
-            $user = $loaded;
+    foreach (['bank.php', 'config.php'] as $name) {
+        $file = HODBOOK_CONFIG_DIR . '/' . $name;
+        if (is_file($file)) {
+            $loaded = require $file;
+            if (is_array($loaded)) {
+                $user = array_replace($user, $loaded);
+            }
         }
     }
     return $cfg = hodbook_config_normalize($user);

@@ -17,15 +17,17 @@
 #   PAYMENTS_MOLLIE_API_KEY -> chiave API Mollie (test_... o live_...). Il deploy genera config.php sul server da questo
 #                              segreto; la chiave non passa mai dal repository.
 # Segreti per le prenotazioni con bonifico (site/prenota.php; parte privata in site/_prenotazioni/, bloccata dal web):
+#   Le coordinate bancarie mostrate al cliente stanno nel repository, in site/_prenotazioni/config/bank.php.
+#   I tre segreti BOOKING_IBAN, BOOKING_ACCOUNT_HOLDER e BOOKING_BIC sono FACOLTATIVI: se presenti hanno la precedenza.
 #   BOOKING_IBAN            -> IBAN del conto Revolut Business su cui arrivano le caparre (con o senza spazi).
 #                              Prima del deploy viene controllato con mod-97: se non è valido il deploy si ferma.
 #   BOOKING_ACCOUNT_HOLDER  -> intestatario del conto, mostrato al cliente nei dati per il bonifico.
 #   BOOKING_BIC             -> facoltativo: BIC/SWIFT da mostrare al cliente (8 o 11 caratteri).
 #   REVOLUT_WEBHOOK_SECRET  -> segreto di firma del webhook Revolut (inizia con wsk_). Per ruotarlo senza interruzioni
 #                              si possono indicare più segreti separati da virgola.
-#   Il deploy genera site/_prenotazioni/config/config.php da questi segreti: i valori non passano mai dal repository
-#   e non vengono mai stampati nel log. Senza IBAN o intestatario il file non viene generato e prenota.php propone la
-#   prenotazione via WhatsApp; senza REVOLUT_WEBHOOK_SECRET si prenota lo stesso, ma lo stato non si aggiorna da solo.
+#   Il deploy genera site/_prenotazioni/config/config.php dai segreti presenti: i loro valori non vengono mai stampati
+#   nel log. Senza alcun segreto il file non viene generato e valgono le coordinate di bank.php; senza
+#   REVOLUT_WEBHOOK_SECRET si prenota lo stesso, ma lo stato non si aggiorna da solo.
 #   Webhook da registrare in Revolut Business (Business API, Webhooks v2):
 #     URL:    https://www.thehouseofdog.it/webhook-revolut.php
 #     Eventi: TransactionCreated e TransactionStateChanged
@@ -90,7 +92,7 @@ jobs:
       # ---- Prenotazioni con bonifico (site/_prenotazioni/) ----
       # config.php (IBAN, intestatario, BIC, segreto del webhook Revolut) viene generato qui dai segreti del repository
       # e caricato insieme a site/. I valori non vengono mai stampati: il log riporta solo quali chiavi sono state scritte.
-      # Senza BOOKING_IBAN o BOOKING_ACCOUNT_HOLDER il file non viene scritto (prenota.php mostra il ripiego WhatsApp).
+      # Senza segreti il file non viene scritto e valgono le coordinate di site/_prenotazioni/config/bank.php.
       # Le impostazioni email restano quelle predefinite (mail()); la variabile BOOKING_MERCHANT_EMAIL, se valida,
       # cambia solo l'indirizzo che riceve le notifiche.
       # Database, log, outbox e segreto applicativo che l'app crea sul server in _prenotazioni/data/ sono esclusi dal caricamento.
@@ -108,13 +110,17 @@ jobs:
             require "site/_prenotazioni/lib/validation.php";
             $iban = hodbook_iban_normalize((string)getenv("BOOKING_IBAN"));
             $holder = trim((string)preg_replace("/\s+/", " ", (string)getenv("BOOKING_ACCOUNT_HOLDER")));
-            if ($iban === "" || $holder === "") {
-              echo "BOOKING_IBAN o BOOKING_ACCOUNT_HOLDER assente: config.php prenotazioni non generato (prenotazione online spenta, resta WhatsApp).\n";
-              exit(0);
+            $cfg = [];
+            $set = [];
+            if ($iban !== "") {
+              if (!hodbook_iban_valid($iban)) { fwrite(STDERR, "BOOKING_IBAN non valido: controllo mod-97 o lunghezza non superati.\n"); exit(1); }
+              $cfg["bank_iban"] = $iban;
+              $set[] = "bank_iban";
             }
-            if (!hodbook_iban_valid($iban)) { fwrite(STDERR, "BOOKING_IBAN non valido: controllo mod-97 o lunghezza non superati.\n"); exit(1); }
-            $cfg = ["bank_account_holder" => $holder, "bank_iban" => $iban];
-            $set = ["bank_account_holder", "bank_iban"];
+            if ($holder !== "") {
+              $cfg["bank_account_holder"] = $holder;
+              $set[] = "bank_account_holder";
+            }
             $bic = strtoupper((string)preg_replace("/\s+/", "", (string)getenv("BOOKING_BIC")));
             if ($bic !== "") {
               if (!hodbook_bic_valid($bic)) { fwrite(STDERR, "BOOKING_BIC non ha il formato atteso (8 o 11 caratteri).\n"); exit(1); }
@@ -138,8 +144,12 @@ jobs:
                 echo "Attenzione: BOOKING_MERCHANT_EMAIL non è un indirizzo email valido, resta in uso il valore predefinito.\n";
               }
             }
-            file_put_contents("site/_prenotazioni/config/config.php", "<?php\n/* Generato dal deploy GitHub: non modificare a mano, cambia i segreti del repository. */\nreturn " . var_export($cfg, true) . ";\n");
-            echo "config.php prenotazioni generato con: " . implode(", ", $set) . "\n";
+            if ($cfg === []) {
+              echo "Nessun segreto o variabile per le prenotazioni: config.php non generato, valgono le coordinate di site/_prenotazioni/config/bank.php.\n";
+            } else {
+              file_put_contents("site/_prenotazioni/config/config.php", "<?php\n/* Generato dal deploy GitHub: non modificare a mano, cambia i segreti del repository. */\nreturn " . var_export($cfg, true) . ";\n");
+              echo "config.php prenotazioni generato con: " . implode(", ", $set) . "\n";
+            }
             if ($secrets === []) { echo "Attenzione: REVOLUT_WEBHOOK_SECRET assente, il webhook risponde 503 e lo stato delle prenotazioni non si aggiorna da solo.\n"; }
           '
 
