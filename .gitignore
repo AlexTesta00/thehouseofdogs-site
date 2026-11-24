@@ -18,3 +18,9 @@ payments/data/*
 !payments/data/.gitignore
 !payments/data/.htaccess
 payments/dist/
+
+# Prenotazioni con bonifico (site/_prenotazioni/): configurazione con IBAN e segreto webhook,
+# database, log e segreto applicativo. config.php viene generato dal deploy.
+site/_prenotazioni/config/config.php
+site/_prenotazioni/data/*
+!site/_prenotazioni/data/.gitignore

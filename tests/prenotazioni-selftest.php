@@ -1,0 +1,870 @@
+<?php
+/* Test automatici delle prenotazioni con bonifico (site/_prenotazioni). Questo file non viene pubblicato.
+   Uso:  php tests/prenotazioni-selftest.php          test unitari e di integrazione su una cartella temporanea
+         php tests/prenotazioni-selftest.php --http   in più avvia il server PHP integrato su site/ e prova le pagine
+   Senza php.ini le estensioni vanno passate a mano:
+         php -n -d extension_dir=<cartella php>/ext -d extension=pdo_sqlite -d extension=curl -d extension=mbstring
+             -d extension=openssl tests/prenotazioni-selftest.php --http
+   La cartella privata vera (site/_prenotazioni/config e data) non viene mai toccata: config e dati dei test
+   vivono in una cartella temporanea (costante e variabile d'ambiente HODBOOK_PRIVATE_DIR).
+   Esce con codice 1 se un test fallisce. */
+
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    exit('Solo da riga di comando.');
+}
+
+$withHttp = in_array('--http', $argv, true);
+$siteDir = dirname(__DIR__) . '/site';
+
+/* ---------- Ambiente privato temporaneo ---------- */
+$tmp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'hodbook-selftest-' . bin2hex(random_bytes(4));
+mkdir($tmp . '/config', 0700, true);
+mkdir($tmp . '/data', 0700, true);
+$servers = [];
+
+/* Pulizia anche se un test si interrompe con un'eccezione: server fermati, database chiuso, cartella rimossa. */
+register_shutdown_function(static function () use ($tmp): void {
+    foreach ($GLOBALS['servers'] ?? [] as $s) {
+        if (is_resource($s['proc'])) {
+            proc_terminate($s['proc']);
+            proc_close($s['proc']);
+        }
+    }
+    $GLOBALS['DB'] = null;
+    $GLOBALS['failingDb'] = null;
+    gc_collect_cycles();
+    $rm = static function (string $dir) use (&$rm): void {
+        foreach (scandir($dir) ?: [] as $name) {
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $name;
+            is_dir($path) ? $rm($path) : @unlink($path);
+        }
+        @rmdir($dir);
+    };
+    if (is_dir($tmp)) {
+        $rm($tmp);
+    }
+});
+
+const VECTOR_SECRET = 'wsk_r59a4HfWVAKycbCaNO1RvgCJec02gRd8';
+const VECTOR_TS = '1683650202360';
+const VECTOR_BODY = '{"data":{"id":"645a7696-22f3-aa47-9c74-cbae0449cc46","new_state":"completed","old_state":"pending","request_id":"app_charges-9f5d5eb3-1e06-46c5-b1c0-3914763e0bcb"},"event":"TransactionStateChanged","timestamp":"2023-05-09T16:36:38.028960Z"}';
+const VECTOR_SIG = 'v1=bca326fb378d0da7f7c490ad584a8106bab9723d8d9cdd0d50b4c5b3be3837c0';
+
+$secretA = 'wsk_' . bin2hex(random_bytes(16));
+$secretB = 'wsk_' . bin2hex(random_bytes(16));
+const TEST_IBAN = 'IT60X0542811101000000123456';   /* IBAN di esempio con cifre di controllo valide */
+
+function write_config(string $dir, array $cfg): void
+{
+    file_put_contents($dir . '/config/config.php', "<?php\nreturn " . var_export($cfg, true) . ";\n");
+}
+
+write_config($tmp, [
+    'bank_account_holder'     => 'TITOLARE DI PROVA',
+    'bank_iban'               => 'it60 x054 2811 1010 0000 0123 456',
+    'bank_bic'                => 'revolt21',
+    'revolut_webhook_secrets' => $secretA,
+]);
+
+define('HODBOOK_PRIVATE_DIR', $tmp);
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$_SERVER['SCRIPT_NAME'] = '/prenota.php';
+$_SERVER['HTTP_HOST'] = 'example.test';
+require $siteDir . '/_prenotazioni/bootstrap.php';
+
+$pass = 0;
+$fail = 0;
+function check(string $name, bool $ok, string $info = ''): void
+{
+    global $pass, $fail;
+    if ($ok) {
+        $pass++;
+        echo "  ok   $name\n";
+    } else {
+        $fail++;
+        echo "  FAIL $name" . ($info !== '' ? "  ($info)" : '') . "\n";
+    }
+}
+function section(string $t): void
+{
+    echo "\n== $t ==\n";
+}
+
+$CFG = hodbook_config();
+$DB = hodbook_db_open(HODBOOK_DATA_DIR . '/prenotazioni.sqlite');
+
+/* ---------- Helper per i webhook ---------- */
+function now_us(): int
+{
+    return (int)floor(microtime(true) * 1000000);
+}
+function iso_us(int $micros): string
+{
+    return gmdate('Y-m-d\TH:i:s', intdiv($micros, 1000000)) . '.' . str_pad((string)($micros % 1000000), 6, '0', STR_PAD_LEFT) . 'Z';
+}
+function tx_id(): string
+{
+    $h = bin2hex(random_bytes(16));
+    return substr($h, 0, 8) . '-' . substr($h, 8, 4) . '-' . substr($h, 12, 4) . '-' . substr($h, 16, 4) . '-' . substr($h, 20, 12);
+}
+/** TransactionCreated con una gamba (importo positivo = entrata), sul modello dell'esempio della documentazione. */
+function ev_created(string $txId, string $state, int|float $amount, string $currency, string $reference, int $tsUs, array $leg = [], array $data = []): array
+{
+    $leg = array_merge([
+        'leg_id' => $txId . '-0', 'account_id' => '05018b0d-e67c-4fec-bea6-415e9da9432c',
+        'counterparty' => ['id' => '7e18625a-3e6c-4d4f-8429-216c25309a5f', 'account_type' => 'external', 'account_id' => 'ff29e658-f07f-4d81-bc0f-7ad0ff141357'],
+        'amount' => $amount, 'currency' => $currency, 'description' => 'Payment from Mario Rossi',
+    ], $leg);
+    return ['event' => 'TransactionCreated', 'timestamp' => iso_us($tsUs), 'data' => array_merge([
+        'id' => $txId, 'type' => 'transfer', 'state' => $state, 'request_id' => 'req-' . $txId,
+        'created_at' => iso_us($tsUs), 'updated_at' => iso_us($tsUs), 'reference' => $reference, 'legs' => [$leg],
+    ], $data)];
+}
+function ev_state(string $txId, string $old, string $new, int $tsUs): array
+{
+    return ['event' => 'TransactionStateChanged', 'timestamp' => iso_us($tsUs),
+            'data' => ['id' => $txId, 'request_id' => 'req-' . $txId, 'old_state' => $old, 'new_state' => $new]];
+}
+/** Intestazioni firmate come le manda Revolut. */
+function sign(string $raw, string $secret, int $tsMs): array
+{
+    return ['Revolut-Request-Timestamp' => (string)$tsMs, 'Revolut-Signature' => 'v1=' . hash_hmac('sha256', 'v1.' . $tsMs . '.' . $raw, $secret)];
+}
+/** Consegna un evento firmato al gestore del webhook (stesso codice usato da webhook-revolut.php). */
+function deliver(array|string $payload, ?array $cfg = null, ?string $secret = null): array
+{
+    global $CFG, $DB, $secretA;
+    $raw = is_string($payload) ? $payload : json_encode($payload, JSON_UNESCAPED_SLASHES);
+    $nowMs = (int)floor(microtime(true) * 1000);
+    return hodbook_webhook_handle('POST', sign($raw, $secret ?? $secretA, $nowMs), $raw, $cfg ?? $CFG, $nowMs, $DB);
+}
+function new_booking(string $key = 'barboncino'): array
+{
+    global $CFG, $DB;
+    [, $row] = hodbook_booking_create($DB, $CFG, $key, ['first_name' => 'Maria', 'last_name' => 'Rossi', 'email' => 'maria@example.com', 'phone' => '+393331234567'], time());
+    return $row;
+}
+function bk(array $booking): ?array
+{
+    global $DB;
+    return hodbook_booking_by_id($DB, (int)$booking['id']);
+}
+function txrow(string $id): ?array
+{
+    global $DB;
+    return hodbook_revolut_tx_by_id($DB, $id);
+}
+function count_rows(string $sql, array $params = []): int
+{
+    global $DB;
+    $st = $DB->prepare($sql);
+    $st->execute($params);
+    return (int)$st->fetchColumn();
+}
+
+/* =================================================================== */
+section('Ambiente di test isolato');
+check('cartella privata temporanea', HODBOOK_PRIVATE_DIR === $tmp && HODBOOK_DATA_DIR === $tmp . '/data');
+check('database temporaneo in WAL', $DB->query('PRAGMA journal_mode')->fetchColumn() === 'wal');
+check('schema alla versione corrente', (int)$DB->query('PRAGMA user_version')->fetchColumn() === HODBOOK_SCHEMA_VERSION);
+$tables = $DB->query("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
+check('tabelle create', array_values(array_intersect(['bookings', 'rate_limits', 'revolut_events', 'revolut_transactions'], $tables)) === ['bookings', 'rate_limits', 'revolut_events', 'revolut_transactions'], implode(',', $tables));
+hodbook_db_migrate($DB);
+check('migrazione ripetuta senza errori', (int)$DB->query('PRAGMA user_version')->fetchColumn() === HODBOOK_SCHEMA_VERSION);
+
+/* =================================================================== */
+section('Configurazione');
+$def = hodbook_config_normalize([]);
+check('5 prodotti predefiniti', array_keys($def['products']) === ['barboncino', 'maltipoo', 'maltese', 'bassotto-arlecchino', 'bassotto-cioccolato']);
+check('caparre predefinite', array_column($def['products'], 'amount_cents') === [55000, 45000, 40000, 55000, 45000]);
+check('nome prodotto predefinito', $def['products']['bassotto-cioccolato']['name'] === 'Caparra Bassotto Kaninchen Cioccolato');
+check('default EUR, HOD, Revolut, 300 s, WhatsApp', $def['currency'] === 'EUR' && $def['reference_prefix'] === 'HOD' && $def['bank_name'] === 'Revolut'
+    && $def['timestamp_tolerance_seconds'] === 300 && $def['whatsapp_number'] === '393770876017' && $def['trust_proxy_headers'] === false);
+check('senza dati: banca e webhook non configurati', !hodbook_bank_configured($def) && !hodbook_webhook_configured($def));
+check('config di test: banca configurata', hodbook_bank_configured($CFG));
+check('IBAN salvato senza spazi e maiuscolo', $CFG['bank_iban'] === TEST_IBAN);
+check('BIC normalizzato', $CFG['bank_bic'] === 'REVOLT21');
+check('segreto come stringa singola accettato', $CFG['revolut_webhook_secrets'] === [$secretA] && hodbook_webhook_configured($CFG));
+$c = hodbook_config_normalize(['revolut_webhook_secrets' => [$secretA, ' ' . $secretB . ' ', 'sbagliato', '', 'wsk_x']]);
+check('segreti multipli, quelli non validi scartati', $c['revolut_webhook_secrets'] === [$secretA, $secretB]);
+$c = hodbook_config_normalize(['revolut_webhook_secrets' => "$secretA, $secretB"]);
+check('segreti separati da virgola', $c['revolut_webhook_secrets'] === [$secretA, $secretB]);
+$c = hodbook_config_normalize(['bank_account_holder' => 'X', 'bank_iban' => 'IT00X0000000000000000000000']);
+check('IBAN con checksum errato: banca non configurata', !hodbook_bank_configured($c));
+$c = hodbook_config_normalize(['bank_account_holder' => '', 'bank_iban' => TEST_IBAN]);
+check('senza intestatario: banca non configurata', !hodbook_bank_configured($c));
+$c = hodbook_config_normalize(['bank_bic' => 'NON VALIDO!']);
+check('BIC non valido ignorato', $c['bank_bic'] === '');
+$c = hodbook_config_normalize(['products' => ['solo' => ['name' => 'Caparra Test', 'amount_cents' => '1234'], 'Brutta Chiave' => ['name' => 'X', 'amount_cents' => 1], 'zero' => ['name' => 'Z', 'amount_cents' => 0]]]);
+check('products sostituisce l\'elenco e scarta le voci non valide', $c['products'] === ['solo' => ['name' => 'Caparra Test', 'amount_cents' => 1234]]);
+$c = hodbook_config_normalize(['reference_prefix' => 'h-o-d', 'currency' => 'eur', 'timestamp_tolerance_seconds' => 5, 'revolut_account_ids' => 'ACC-1, acc-2']);
+check('prefisso, valuta, tolleranza minima, conti normalizzati', $c['reference_prefix'] === 'HOD' && $c['currency'] === 'EUR'
+    && $c['timestamp_tolerance_seconds'] === 30 && $c['revolut_account_ids'] === ['acc-1', 'acc-2']);
+
+/* =================================================================== */
+section('IBAN, BIC, importi');
+check('IBAN italiano di esempio valido', hodbook_iban_valid(TEST_IBAN));
+check('IBAN con spazi e minuscole valido', hodbook_iban_valid('it60 x054 2811 1010 0000 0123 456'));
+check('IBAN GB di esempio valido', hodbook_iban_valid('GB82 WEST 1234 5698 7654 32'));
+check('IBAN LT (formato Revolut) valido', hodbook_iban_valid('LT121000011101001000'));
+check('checksum errato rifiutato', !hodbook_iban_valid('IT60X0542811101000000123457'));
+check('cifre di controllo 00 rifiutate', !hodbook_iban_valid('IT00X0000000000000000000000'));
+check('lunghezza sbagliata per l\'Italia rifiutata', !hodbook_iban_valid('IT60X054281110100000012345'));
+check('testo qualsiasi rifiutato', !hodbook_iban_valid('non è un iban') && !hodbook_iban_valid(''));
+check('IBAN a gruppi di 4', hodbook_iban_format(TEST_IBAN) === 'IT60 X054 2811 1010 0000 0123 456');
+check('BIC 8 e 11 caratteri', hodbook_bic_valid('REVOLT21') && hodbook_bic_valid('BCITITMMXXX') && !hodbook_bic_valid('REVO21') && !hodbook_bic_valid('revolt21'));
+check('importo 550,00 €', hodbook_format_amount(55000) === '550,00 €');
+check('importo 1.250,05 €', hodbook_format_amount(125005) === '1.250,05 €');
+check('importo da copiare 550,00', hodbook_amount_plain(55000) === '550,00' && hodbook_amount_plain(125005) === '1250,05' && hodbook_amount_plain(5) === '0,05');
+check('centesimi dai numeri Revolut', hodbook_revolut_amount_cents(550) === 55000 && hodbook_revolut_amount_cents(550.5) === 55050
+    && hodbook_revolut_amount_cents(0.29) === 29 && hodbook_revolut_amount_cents(-10) === -1000 && hodbook_revolut_amount_cents('12.34') === 1234
+    && hodbook_revolut_amount_cents('x') === null && hodbook_revolut_amount_cents(null) === null && hodbook_revolut_amount_cents(INF) === null);
+
+/* =================================================================== */
+section('Codice di prenotazione (causale)');
+$re = '/^HOD[' . HODBOOK_REF_ALPHABET . ']{6}\z/';
+$codes = [];
+$chars = '';
+for ($i = 0; $i < 3000; $i++) {
+    $code = hodbook_reference_generate('HOD');
+    $codes[$code] = true;
+    $chars .= substr($code, 3);
+}
+$allFormat = true;
+foreach (array_keys($codes) as $code) {
+    $allFormat = $allFormat && (bool)preg_match($re, $code);
+}
+check('formato prefisso + 6 caratteri, senza separatori', $allFormat);
+check('alfabeto senza 0, O, 1, I', strlen(HODBOOK_REF_ALPHABET) === 32 && strpbrk(HODBOOK_REF_ALPHABET, '0O1I') === false);
+check('nessun 0/O/1/I nei codici generati', strpbrk($chars, '0O1I') === false);
+check('tutti i 32 caratteri usati', count(array_unique(str_split($chars))) === 32);
+check('3000 codici tutti diversi', count($codes) === 3000, (string)count($codes));
+check('estrazione: maiuscole e minuscole', hodbook_reference_extract('hod7k3f9q', 'HOD') === ['HOD7K3F9Q']);
+check('estrazione: spazi, trattini e parole in più', hodbook_reference_extract('Caparra hod-7k3 f9q - Rossi Maria', 'HOD') === ['HOD7K3F9Q']);
+check('estrazione: punti e barre', hodbook_reference_extract('rif. H.O.D/7K3F9Q', 'HOD') === ['HOD7K3F9Q']);
+check('estrazione: nessun codice', hodbook_reference_extract('caparra cucciolo maltese', 'HOD') === []);
+check('estrazione: codice troppo corto', hodbook_reference_extract('HOD7K3F', 'HOD') === []);
+check('estrazione: carattere escluso (0) non valido', hodbook_reference_extract('HOD7K3F0Q', 'HOD') === []);
+check('estrazione: due codici in ordine', hodbook_reference_extract('HODABCDEF poi hod 7k3f9q', 'HOD') === ['HODABCDEF', 'HOD7K3F9Q']);
+check('estrazione: prefisso dentro una parola seguito da caratteri esclusi', hodbook_reference_extract('METHODS HOD7K3F9Q', 'HOD') === ['HOD7K3F9Q']);
+check('estrazione: ogni posizione del prefisso viene provata', hodbook_reference_extract('methods 22222 e HOD7K3F9Q', 'HOD') === ['HODS22222', 'HOD7K3F9Q']);
+check('estrazione: doppioni rimossi', hodbook_reference_extract('HOD7K3F9Q HOD7K3F9Q', 'HOD') === ['HOD7K3F9Q']);
+
+/* =================================================================== */
+section('Validazione del modulo');
+$good = ['nome' => ' Maria ', 'cognome' => "D\u{2019}Angelo-Rossi", 'email' => 'Maria.Rossi@Example.COM', 'telefono' => '+39 333.123-4567', 'termini' => '1', 'tipo' => 'maltese'];
+[$d, $errs] = hodbook_validate_booking_form($good, $CFG['products']);
+check('dati validi accettati', $errs === [], json_encode($errs, JSON_UNESCAPED_UNICODE));
+check('nome ripulito', $d['first_name'] === 'Maria');
+check('apostrofo tipografico normalizzato', $d['last_name'] === "D'Angelo-Rossi");
+check('email in minuscolo', $d['email'] === 'maria.rossi@example.com');
+check('telefono normalizzato', $d['phone'] === '+393331234567');
+check('prodotto', $d['product_key'] === 'maltese');
+$bad = function (array $over) use ($good): array {
+    return hodbook_validate_booking_form(array_merge($good, $over), hodbook_config()['products'])[1];
+};
+check('nome di 1 carattere rifiutato', isset($bad(['nome' => 'M'])['nome']));
+check('nome con cifre rifiutato', isset($bad(['nome' => 'Mar1a'])['nome']));
+check('nome con simboli rifiutato', isset($bad(['nome' => 'Maria<script>'])['nome']));
+check('nome di 101 caratteri rifiutato', isset($bad(['nome' => str_repeat('a', 101)])['nome']));
+check('nome di 100 caratteri accettato', !isset($bad(['nome' => str_repeat('a', 100)])['nome']));
+check('nome accentato accettato', !isset($bad(['nome' => 'Niccolò Ánne'])['nome']));
+check('nome solo trattini rifiutato', isset($bad(['nome' => "-'-"])['nome']));
+check('cognome mancante rifiutato', isset($bad(['cognome' => ''])['cognome']));
+check('campo non stringa rifiutato', isset($bad(['cognome' => ['x']])['cognome']));
+check('email non valida rifiutata', isset($bad(['email' => 'maria@'])['email']));
+check('email non ASCII rifiutata', isset($bad(['email' => 'mària@example.com'])['email']));
+check('telefono troppo corto rifiutato', isset($bad(['telefono' => '12345'])['telefono']));
+check('telefono di 16 cifre rifiutato', isset($bad(['telefono' => '1234567890123456'])['telefono']));
+check('telefono con lettere rifiutato', isset($bad(['telefono' => '333 abc 4567'])['telefono']));
+check('telefono con doppio + rifiutato', isset($bad(['telefono' => '++393331234567'])['telefono']));
+check('telefono 6 cifre accettato', !isset($bad(['telefono' => '123456'])['telefono']));
+check('condizioni non accettate rifiutate', isset($bad(['termini' => ''])['termini']));
+check('prodotto sconosciuto rifiutato', isset($bad(['tipo' => 'gatto'])['tipo']));
+check('UTF-8 non valido rifiutato', isset($bad(['nome' => "Mar\xC3\x28a"])['nome']));
+
+/* =================================================================== */
+section('CSRF senza sessione');
+$now = time();
+$secret = hodbook_app_secret();
+check('segreto applicativo creato in data/', is_file(HODBOOK_DATA_DIR . '/app-secret.php') && strlen($secret) === 64);
+check('segreto stabile tra le letture', hodbook_read_app_secret(HODBOOK_DATA_DIR . '/app-secret.php') === $secret);
+check('file del segreto non stampa nulla se eseguito', (static function (string $f): string { ob_start(); include $f; return (string)ob_get_clean(); })(HODBOOK_DATA_DIR . '/app-secret.php') === '');
+$tok = hodbook_form_token($now - 10);
+check('token formato timestamp.firma', (bool)preg_match('/^\d{10}\.[a-f0-9]{64}$/', $tok));
+check('token valido (10 s)', hodbook_form_token_check($tok, $now) === 'ok');
+check('token valido al limite di 2 s', hodbook_form_token_check(hodbook_form_token($now - 2), $now) === 'ok');
+check('token valido al limite di 2 ore', hodbook_form_token_check(hodbook_form_token($now - 7200), $now) === 'ok');
+check('token troppo recente (1 s)', hodbook_form_token_check(hodbook_form_token($now - 1), $now) === 'too_fresh');
+check('token dal futuro = troppo recente', hodbook_form_token_check(hodbook_form_token($now + 60), $now) === 'too_fresh');
+check('token scaduto (2 ore + 1 s)', hodbook_form_token_check(hodbook_form_token($now - 7201), $now) === 'expired');
+[$ts, $sig] = explode('.', $tok);
+check('firma alterata rifiutata', hodbook_form_token_check($ts . '.' . str_repeat('0', 64), $now) === 'invalid');
+check('timestamp alterato rifiutato', hodbook_form_token_check(((int)$ts - 100) . '.' . $sig, $now) === 'invalid');
+check('token di un altro segreto rifiutato', hodbook_form_token_check(hodbook_form_token($now - 10, str_repeat('ab', 32)), $now) === 'invalid');
+check('token vuoto, malformato o non stringa rifiutato', hodbook_form_token_check('', $now) === 'invalid' && hodbook_form_token_check('abc', $now) === 'invalid'
+    && hodbook_form_token_check(null, $now) === 'invalid' && hodbook_form_token_check([$tok], $now) === 'invalid' && hodbook_form_token_check($tok . "\n", $now) === 'invalid');
+
+$_SERVER['HTTP_SEC_FETCH_SITE'] = 'cross-site';
+check('POST cross-site rifiutato', !hodbook_same_origin_check());
+$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
+check('POST same-origin accettato', hodbook_same_origin_check());
+unset($_SERVER['HTTP_SEC_FETCH_SITE']);
+$_SERVER['HTTP_ORIGIN'] = 'https://evil.test';
+check('Origin di un altro host rifiutato', !hodbook_same_origin_check());
+$_SERVER['HTTP_ORIGIN'] = 'https://example.test';
+check('Origin dello stesso host accettato', hodbook_same_origin_check());
+unset($_SERVER['HTTP_ORIGIN']);
+check('senza intestazioni accettato', hodbook_same_origin_check());
+
+/* =================================================================== */
+section('Limite di frequenza');
+$bucket = hodbook_ip_bucket('prenota', '203.0.113.7');
+check('IP salvato solo come hash', strlen($bucket) === 64 && !str_contains($bucket, '203.0.113.7') && $bucket !== hash('sha256', '203.0.113.7'));
+check('hash diverso per IP diversi', $bucket !== hodbook_ip_bucket('prenota', '203.0.113.8'));
+check('IPv6 raggruppati per /64', hodbook_ip_bucket('prenota', '2001:db8:1:2::1') === hodbook_ip_bucket('prenota', '2001:db8:1:2:ffff::9')
+    && hodbook_ip_bucket('prenota', '2001:db8:1:2::1') !== hodbook_ip_bucket('prenota', '2001:db8:1:3::1'));
+$allowed = 0;
+for ($i = 0; $i < 10; $i++) {
+    if (hodbook_rate_limit($DB, $bucket, 8, 3600, $now)) {
+        $allowed++;
+    }
+}
+check('8 invii consentiti su 10 nella stessa ora', $allowed === 8, (string)$allowed);
+check('altro IP non bloccato', hodbook_rate_limit($DB, hodbook_ip_bucket('prenota', '198.51.100.1'), 8, 3600, $now));
+check('dopo un\'ora di nuovo consentito', hodbook_rate_limit($DB, $bucket, 8, 3600, $now + 3601));
+
+/* =================================================================== */
+section('Creazione della prenotazione');
+[$token, $b] = hodbook_booking_create($DB, $CFG, 'barboncino', ['first_name' => 'Maria', 'last_name' => 'Rossi', 'email' => 'maria@example.com', 'phone' => '+393331234567'], $now);
+check('prenotazione in attesa', $b['status'] === 'pending' && $b['received_cents'] === null && $b['paid_at'] === null && $b['paid_tx_id'] === null);
+check('nome prodotto e caparra copiati', $b['product_key'] === 'barboncino' && $b['product_name'] === 'Caparra Barboncino Toy' && (int)$b['amount_cents'] === 55000 && $b['currency'] === 'EUR');
+check('accettazione delle condizioni registrata', (int)$b['terms_accepted_at'] === $now);
+check('token 64 esadecimali', hodbook_valid_token_format($token));
+check('token mai salvato in chiaro', $b['token_hash'] === hash('sha256', $token) && count_rows('SELECT COUNT(*) FROM bookings WHERE token_hash = :t', [':t' => $token]) === 0);
+check('codice nel formato giusto', (bool)preg_match($re, (string)$b['reference']));
+check('ricerca per token', (hodbook_booking_by_token($DB, $token)['id'] ?? null) === $b['id']);
+check('token sconosciuto o malformato -> null', hodbook_booking_by_token($DB, str_repeat('0', 64)) === null && hodbook_booking_by_token($DB, 'abc') === null
+    && hodbook_booking_by_token($DB, strtoupper($token)) === null);
+$cfgChanged = $CFG;
+$cfgChanged['products']['barboncino'] = ['name' => 'Caparra Barboncino Toy NUOVA', 'amount_cents' => 99900];
+new_booking();
+check('cambiare la config non altera le prenotazioni esistenti', ($row = bk($b)) && $row['product_name'] === 'Caparra Barboncino Toy' && (int)$row['amount_cents'] === 55000);
+[, $b2] = hodbook_booking_create($DB, $cfgChanged, 'barboncino', ['first_name' => 'Luca', 'last_name' => 'Bianchi', 'email' => 'l@example.com', 'phone' => '123456'], $now);
+check('le nuove prenotazioni usano la config nuova', (int)$b2['amount_cents'] === 99900);
+$queue = [(string)$b['reference'], (string)$b['reference'], 'HODZZZZZ2'];
+[, $b3] = hodbook_booking_create($DB, $CFG, 'maltese', ['first_name' => 'Anna', 'last_name' => 'Verdi', 'email' => 'a@example.com', 'phone' => '123456'], $now,
+    static function () use (&$queue): string { return array_shift($queue); });
+check('collisione del codice: si riprova con un altro', $b3['reference'] === 'HODZZZZZ2' && $queue === []);
+$threw = false;
+try {
+    hodbook_booking_create($DB, $CFG, 'gatto', ['first_name' => 'A', 'last_name' => 'B', 'email' => 'c', 'phone' => 'd'], $now);
+} catch (InvalidArgumentException) {
+    $threw = true;
+}
+check('prodotto sconosciuto: eccezione', $threw);
+
+/* =================================================================== */
+section('Firma e timestamp dei webhook Revolut');
+check('vettore ufficiale Revolut: firma valida', hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, VECTOR_SIG));
+check('vettore: firma calcolata identica', 'v1=' . hash_hmac('sha256', 'v1.' . VECTOR_TS . '.' . VECTOR_BODY, VECTOR_SECRET) === VECTOR_SIG);
+check('vettore: più firme nell\'intestazione', hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, 'v1=' . str_repeat('a', 64) . ',' . VECTOR_SIG));
+check('vettore: più firme con spazi', hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, VECTOR_SIG . ', v1=' . str_repeat('b', 64)));
+check('vettore: più segreti configurati', hodbook_revolut_signature_valid([$secretA, VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, VECTOR_SIG));
+check('vettore: segreto sbagliato', !hodbook_revolut_signature_valid([$secretA, $secretB], VECTOR_TS, VECTOR_BODY, VECTOR_SIG));
+check('vettore: corpo modificato', !hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY . ' ', VECTOR_SIG));
+check('vettore: corpo ricodificato (spazi diversi)', !hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, json_encode(json_decode(VECTOR_BODY), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), VECTOR_SIG));
+check('vettore: timestamp modificato', !hodbook_revolut_signature_valid([VECTOR_SECRET], '1683650202361', VECTOR_BODY, VECTOR_SIG));
+check('firma senza prefisso v1= rifiutata', !hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, substr(VECTOR_SIG, 3)));
+check('intestazione vuota o timestamp non numerico', !hodbook_revolut_signature_valid([VECTOR_SECRET], VECTOR_TS, VECTOR_BODY, '')
+    && !hodbook_revolut_signature_valid([VECTOR_SECRET], '', VECTOR_BODY, VECTOR_SIG) && !hodbook_revolut_signature_valid([], VECTOR_TS, VECTOR_BODY, VECTOR_SIG));
+$nowMs = (int)floor(microtime(true) * 1000);
+check('timestamp attuale accettato', hodbook_revolut_timestamp_fresh((string)$nowMs, $nowMs, 300));
+check('timestamp a 299 s accettato (passato e futuro)', hodbook_revolut_timestamp_fresh((string)($nowMs - 299000), $nowMs, 300) && hodbook_revolut_timestamp_fresh((string)($nowMs + 299000), $nowMs, 300));
+check('timestamp a 301 s rifiutato (passato e futuro)', !hodbook_revolut_timestamp_fresh((string)($nowMs - 301000), $nowMs, 300) && !hodbook_revolut_timestamp_fresh((string)($nowMs + 301000), $nowMs, 300));
+check('timestamp del vettore (2023) vecchio: rifiutato', !hodbook_revolut_timestamp_fresh(VECTOR_TS, $nowMs, 300));
+check('timestamp del vettore accettato al suo istante', hodbook_revolut_timestamp_fresh(VECTOR_TS, (int)VECTOR_TS + 1000, 300));
+check('timestamp non numerico rifiutato', !hodbook_revolut_timestamp_fresh('abc', $nowMs, 300) && !hodbook_revolut_timestamp_fresh('', $nowMs, 300));
+check('orario evento in microsecondi', hodbook_revolut_parse_time('2023-05-09T16:36:38.028960Z') === 1683650198028960);
+check('precisioni diverse confrontabili', hodbook_revolut_parse_time('2023-04-06T12:21:49.865Z') === hodbook_revolut_parse_time('2023-04-06T12:21:49.865000Z'));
+check('fuso orario esplicito', hodbook_revolut_parse_time('2023-04-06T14:21:49.865+02:00') === hodbook_revolut_parse_time('2023-04-06T12:21:49.865Z'));
+check('orario non valido -> null', hodbook_revolut_parse_time('ieri') === null && hodbook_revolut_parse_time('2023-02-30T10:00:00Z') === null && hodbook_revolut_parse_time(null) === null);
+
+/* =================================================================== */
+section('Webhook: risposte HTTP del gestore');
+$r = hodbook_webhook_handle('GET', [], '', $CFG, $nowMs, $DB);
+check('GET -> 405', $r['status'] === 405);
+$noSecret = hodbook_config_normalize(['bank_account_holder' => 'X', 'bank_iban' => TEST_IBAN]);
+$raw = json_encode(ev_state(tx_id(), 'pending', 'completed', now_us()));
+$r = hodbook_webhook_handle('POST', sign($raw, $secretA, $nowMs), $raw, $noSecret, $nowMs, $DB);
+check('senza segreto configurato -> 503', $r['status'] === 503);
+$big = str_repeat('x', HODBOOK_WEBHOOK_MAX_BODY + 1);
+$r = hodbook_webhook_handle('POST', sign($big, $secretA, $nowMs), $big, $CFG, $nowMs, $DB);
+check('corpo oltre 64 KB -> 413', $r['status'] === 413);
+$r = hodbook_webhook_handle('POST', [], $raw, $CFG, $nowMs, $DB);
+check('senza firma -> 401', $r['status'] === 401 && $r['body'] === ['ok' => false, 'error' => 'unauthorized']);
+$r = hodbook_webhook_handle('POST', sign($raw, $secretB, $nowMs), $raw, $CFG, $nowMs, $DB);
+check('firma con un altro segreto -> 401', $r['status'] === 401);
+$r = hodbook_webhook_handle('POST', sign($raw, $secretA, $nowMs - 600000), $raw, $CFG, $nowMs, $DB);
+check('timestamp vecchio di 10 minuti -> 401', $r['status'] === 401);
+$r = hodbook_webhook_handle('POST', ['revolut-request-timestamp' => VECTOR_TS, 'REVOLUT-SIGNATURE' => VECTOR_SIG], VECTOR_BODY,
+    hodbook_config_normalize(['revolut_webhook_secrets' => VECTOR_SECRET]), (int)VECTOR_TS + 2000, $DB);
+check('vettore ufficiale attraverso il gestore -> 200 (intestazioni senza distinzione di maiuscole)', $r['status'] === 200 && $r['body'] === ['ok' => true]);
+$r = deliver('{"event": "TransactionCreated", "data": ');
+check('JSON malformato con firma valida -> 400', $r['status'] === 400);
+$r = deliver('"solo una stringa"');
+check('JSON che non è un oggetto -> 400', $r['status'] === 400);
+$r = deliver(['event' => 'PayoutLinkCreated', 'timestamp' => iso_us(now_us()), 'data' => ['id' => tx_id(), 'state' => 'created']]);
+check('PayoutLinkCreated -> 200 ignorato', $r['status'] === 200 && ($r['result']['result'] ?? '') === 'ignored');
+$r = deliver(['event' => 'PayoutLinkStateChanged', 'timestamp' => iso_us(now_us()), 'data' => ['id' => tx_id(), 'new_state' => 'active']]);
+check('PayoutLinkStateChanged -> 200 ignorato', $r['status'] === 200 && ($r['result']['result'] ?? '') === 'ignored');
+$r = deliver(['event' => 'TransactionCreated', 'timestamp' => iso_us(now_us()), 'data' => ['state' => 'completed']]);
+check('TransactionCreated senza id -> 200 ignorato', $r['status'] === 200 && ($r['result']['result'] ?? '') === 'ignored');
+$failingDb = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$r = hodbook_webhook_handle('POST', sign($raw, $secretA, $nowMs), $raw, $CFG, $nowMs, $failingDb);
+check('errore interno (database senza tabelle) -> 500 per far ritentare Revolut', $r['status'] === 500 && $r['body']['ok'] === false);
+
+/* =================================================================== */
+section('Webhook: abbinamento dei bonifici');
+
+/* 1. Bonifico istantaneo completato con l'importo esatto */
+$b = new_booking('barboncino');
+$t = tx_id();
+$r = deliver(ev_created($t, 'completed', 550, 'EUR', (string)$b['reference'], now_us()));
+$row = bk($b);
+check('completato con importo esatto -> paid', $r['status'] === 200 && $row['status'] === 'paid', json_encode($r));
+check('paid: paid_tx_id, received_cents, paid_at', $row['paid_tx_id'] === $t && (int)$row['received_cents'] === 55000 && (int)$row['paid_at'] >= $now);
+check('transazione salvata e collegata', ($x = txrow($t)) && (int)$x['booking_id'] === (int)$b['id'] && (int)$x['amount_cents'] === 55000 && $x['state'] === 'completed' && $x['reference_text'] === $b['reference']);
+check('esito del gestore riporta lo stato', ($r['result']['booking_status'] ?? '') === 'paid' && ($r['result']['event'] ?? '') === 'TransactionCreated');
+
+/* 2. pending, poi StateChanged completed */
+$b = new_booking('maltipoo');
+$t = tx_id();
+$t0 = now_us();
+deliver(ev_created($t, 'pending', 450, 'EUR', 'Caparra ' . strtolower((string)$b['reference']), $t0));
+check('pending -> incoming', bk($b)['status'] === 'incoming');
+deliver(ev_state($t, 'pending', 'completed', $t0 + 5000000));
+check('poi StateChanged completed -> paid', bk($b)['status'] === 'paid' && bk($b)['paid_tx_id'] === $t);
+
+/* 3. StateChanged prima del Created (fuori ordine) */
+$b = new_booking('maltese');
+$t = tx_id();
+$t0 = now_us();
+$r1 = deliver(ev_state($t, 'pending', 'completed', $t0 + 3000000));
+check('StateChanged prima del Created -> 200, riga provvisoria senza importo', $r1['status'] === 200 && ($x = txrow($t)) && $x['amount_cents'] === null && $x['booking_id'] === null && $x['state'] === 'completed');
+check('prenotazione ancora in attesa', bk($b)['status'] === 'pending');
+deliver(ev_created($t, 'pending', 400, 'EUR', (string)$b['reference'], $t0));
+check('Created più vecchio non sovrascrive lo stato più recente', txrow($t)['state'] === 'completed');
+check('fuori ordine -> paid', bk($b)['status'] === 'paid' && (int)bk($b)['received_cents'] === 40000);
+
+/* 4. Consegna duplicata */
+$b = new_booking('maltese');
+$t = tx_id();
+$ev = ev_created($t, 'completed', 400, 'EUR', (string)$b['reference'], now_us());
+$raw = json_encode($ev, JSON_UNESCAPED_SLASHES);
+deliver($raw);
+$first = bk($b);
+$DB->prepare('UPDATE bookings SET paid_at = paid_at - 100 WHERE id = :id')->execute([':id' => $b['id']]);
+$r = deliver($raw);
+check('consegna ripetuta -> 200 senza rielaborare', $r['status'] === 200 && ($r['result']['result'] ?? '') === 'duplicate');
+check('consegna ripetuta: prenotazione invariata', (int)bk($b)['paid_at'] === (int)$first['paid_at'] - 100 && bk($b)['status'] === 'paid');
+check('un solo evento registrato per corpo', count_rows('SELECT COUNT(*) FROM revolut_events WHERE body_hash = :h', [':h' => hash('sha256', $raw)]) === 1);
+$r = deliver($ev);
+check('stesso evento con firma nuova: sempre duplicato', ($r['result']['result'] ?? '') === 'duplicate');
+
+/* 5. Importo diverso */
+$b = new_booking('barboncino');
+$t = tx_id();
+deliver(ev_created($t, 'completed', 500, 'EUR', (string)$b['reference'], now_us()));
+check('importo diverso -> review', bk($b)['status'] === 'review' && (int)bk($b)['received_cents'] === 50000 && bk($b)['paid_at'] === null);
+
+/* 6. Stornato dopo il pagamento */
+$b = new_booking('barboncino');
+$t = tx_id();
+$t0 = now_us();
+deliver(ev_created($t, 'completed', 550, 'EUR', (string)$b['reference'], $t0));
+check('pagato', bk($b)['status'] === 'paid');
+deliver(ev_state($t, 'completed', 'reverted', $t0 + 60000000));
+$row = bk($b);
+check('reverted dopo paid -> pending, campi del pagamento azzerati', $row['status'] === 'pending' && $row['paid_tx_id'] === null && $row['paid_at'] === null && $row['received_cents'] === null);
+
+/* 7. Uscita (importo negativo) ignorata */
+$b = new_booking('barboncino');
+$t = tx_id();
+$r = deliver(ev_created($t, 'completed', -550, 'EUR', (string)$b['reference'], now_us()));
+check('bonifico in uscita -> 200 ignorato, nessuna transazione', $r['status'] === 200 && ($r['result']['result'] ?? '') === 'ignored' && txrow($t) === null && bk($b)['status'] === 'pending');
+
+/* 8. Altra valuta ignorata */
+$r = deliver(ev_created($t2 = tx_id(), 'completed', 550, 'GBP', (string)$b['reference'], now_us()));
+check('valuta diversa -> ignorato', ($r['result']['result'] ?? '') === 'ignored' && txrow($t2) === null && bk($b)['status'] === 'pending');
+
+/* 9. Codice che non corrisponde a nessuna prenotazione */
+$t = tx_id();
+$before = count_rows("SELECT COUNT(*) FROM bookings WHERE status <> 'pending'");
+$r = deliver(ev_created($t, 'completed', 550, 'EUR', 'caparra HODZZZZZZ rossi', now_us()));
+check('nessun abbinamento: transazione salvata senza prenotazione', $r['status'] === 200 && ($x = txrow($t)) && $x['booking_id'] === null && (int)$x['amount_cents'] === 55000);
+check('nessun abbinamento: nessuna prenotazione cambiata', count_rows("SELECT COUNT(*) FROM bookings WHERE status <> 'pending'") === $before);
+
+/* 10. Una seconda transazione non declassa una prenotazione pagata */
+$b = new_booking('maltipoo');
+$tA = tx_id();
+$tB = tx_id();
+$t0 = now_us();
+deliver(ev_created($tA, 'completed', 450, 'EUR', (string)$b['reference'], $t0));
+$paid = bk($b);
+deliver(ev_created($tB, 'pending', 450, 'EUR', (string)$b['reference'], $t0 + 1000000));
+check('seconda transazione pending: resta paid', bk($b)['status'] === 'paid' && bk($b)['paid_tx_id'] === $tA);
+deliver(ev_state($tB, 'pending', 'declined', $t0 + 2000000));
+check('seconda transazione declined: resta paid', bk($b)['status'] === 'paid' && bk($b)['paid_tx_id'] === $tA);
+$tC = tx_id();
+deliver(ev_created($tC, 'completed', 100, 'EUR', (string)$b['reference'], $t0 + 3000000));
+deliver(ev_state($tC, 'completed', 'reverted', $t0 + 4000000));
+check('terza transazione con importo diverso e stornata: resta paid, paid_at invariato', bk($b)['status'] === 'paid' && bk($b)['paid_tx_id'] === $tA && (int)bk($b)['paid_at'] === (int)$paid['paid_at']);
+
+/* 11. Filtro sui conti */
+$cfgAcc = $CFG;
+$cfgAcc['revolut_account_ids'] = ['05018b0d-e67c-4fec-bea6-415e9da9432c'];
+$b = new_booking('maltese');
+$t = tx_id();
+$r = deliver(ev_created($t, 'completed', 400, 'EUR', (string)$b['reference'], now_us(), ['account_id' => '11111111-2222-3333-4444-555555555555']), $cfgAcc);
+check('conto non in elenco -> ignorato', ($r['result']['result'] ?? '') === 'ignored' && txrow($t) === null && bk($b)['status'] === 'pending');
+$t = tx_id();
+deliver(ev_created($t, 'completed', 400, 'EUR', (string)$b['reference'], now_us(), ['account_id' => '05018B0D-E67C-4FEC-BEA6-415E9DA9432C']), $cfgAcc);
+check('conto in elenco (maiuscole indifferenti) -> paid', bk($b)['status'] === 'paid');
+
+/* 12. Altri casi */
+$b = new_booking('barboncino');
+$t = tx_id();
+$t0 = now_us();
+deliver(ev_created($t, 'completed', 550, 'EUR', (string)$b['reference'], $t0 + 10000000));
+deliver(ev_state($t, 'created', 'pending', $t0));
+check('StateChanged più vecchio non sovrascrive', txrow($t)['state'] === 'completed' && bk($b)['status'] === 'paid');
+
+$b = new_booking('barboncino');
+deliver(ev_created($t = tx_id(), 'completed', 550, 'EUR', '', now_us(), ['description' => 'From MARIO ROSSI ' . strtolower((string)$b['reference'])]));
+check('codice solo nella descrizione della gamba -> paid', bk($b)['status'] === 'paid');
+
+$b = new_booking('barboncino');
+$ref = (string)$b['reference'];
+deliver(ev_created($t = tx_id(), 'completed', 550, 'EUR', 'caparra ' . substr($ref, 0, 3) . '-' . substr($ref, 3, 3) . ' ' . substr($ref, 6) . ' Rossi', now_us()));
+check('causale disordinata ("caparra HOD-XXX XXX Rossi") -> paid', bk($b)['status'] === 'paid');
+
+$b = new_booking('barboncino');
+deliver(ev_created($t = tx_id(), 'completed', 550, 'EUR', 'HODZZZZZZ e poi ' . $b['reference'], now_us()));
+check('primo codice inesistente, secondo valido -> abbinato al secondo', bk($b)['status'] === 'paid');
+
+$b = new_booking('barboncino');
+$t0 = now_us();
+deliver(ev_created($t = tx_id(), 'pending', 550, 'EUR', (string)$b['reference'], $t0));
+deliver(ev_state($t, 'pending', 'processing', $t0 + 1000000));
+check('stato sconosciuto -> non definitivo (incoming)', txrow($t)['state'] === 'processing' && bk($b)['status'] === 'incoming');
+deliver(ev_state($t, 'processing', 'declined', $t0 + 2000000));
+check('pending poi declined -> di nuovo pending', bk($b)['status'] === 'pending');
+
+$b = new_booking('barboncino');
+$t0 = now_us();
+deliver(ev_created($t = tx_id(), 'completed', 549.99, 'EUR', (string)$b['reference'], $t0));
+check('549,99 € -> review', bk($b)['status'] === 'review' && (int)bk($b)['received_cents'] === 54999);
+deliver(ev_state($t, 'completed', 'reverted', $t0 + 1000000));
+check('review poi reverted -> pending', bk($b)['status'] === 'pending' && bk($b)['received_cents'] === null);
+deliver(ev_created($t2 = tx_id(), 'completed', 550, 'EUR', (string)$b['reference'], $t0 + 2000000));
+check('poi bonifico corretto -> paid', bk($b)['status'] === 'paid' && bk($b)['paid_tx_id'] === $t2);
+
+$payload = ev_created($t2 = tx_id(), 'completed', 1, 'EUR', 'nessun codice', now_us());
+unset($payload['timestamp']);
+$r = deliver($payload);
+check('evento senza timestamp: usa quello firmato dell\'intestazione', $r['status'] === 200 && ($x = txrow($t2)) && (int)$x['state_event_ts'] > 0);
+
+/* =================================================================== */
+section('Stato calcolato (funzione pura)');
+$base = ['amount_cents' => 55000, 'currency' => 'EUR', 'status' => 'pending', 'paid_tx_id' => null, 'paid_at' => null, 'received_cents' => null];
+$tx = static fn(string $id, ?string $state, ?int $amount, int $created = 1, string $cur = 'EUR'): array => ['tx_id' => $id, 'state' => $state, 'amount_cents' => $amount, 'currency' => $cur, 'created_at' => $created];
+check('nessuna transazione: nessun cambiamento', hodbook_booking_evaluate($base, [], 100) === []);
+check('pending -> incoming', hodbook_booking_evaluate($base, [$tx('a', 'pending', 55000)], 100) === ['status' => 'incoming']);
+check('created -> incoming', hodbook_booking_evaluate($base, [$tx('a', 'created', 55000)], 100) === ['status' => 'incoming']);
+check('completed esatto -> paid', hodbook_booking_evaluate($base, [$tx('a', 'completed', 55000)], 100) === ['status' => 'paid', 'paid_tx_id' => 'a', 'received_cents' => 55000, 'paid_at' => 100]);
+check('importo non ancora noto: ignorato', hodbook_booking_evaluate($base, [$tx('a', 'completed', null)], 100) === []);
+$paidA = array_merge($base, ['status' => 'paid', 'paid_tx_id' => 'a', 'paid_at' => 50, 'received_cents' => 55000]);
+check('pagato da a, b pending: invariato', hodbook_booking_evaluate($paidA, [$tx('a', 'completed', 55000), $tx('b', 'pending', 55000)], 100) === []);
+check('pagato da a, b completed esatto: resta a', hodbook_booking_evaluate($paidA, [$tx('b', 'completed', 55000, 0), $tx('a', 'completed', 55000, 5)], 100) === []);
+check('pagato da a, a stornato e b esatto: pagato da b', hodbook_booking_evaluate($paidA, [$tx('a', 'reverted', 55000), $tx('b', 'completed', 55000)], 100) === ['paid_tx_id' => 'b', 'paid_at' => 100]);
+check('pagato da a, a stornato: pending', hodbook_booking_evaluate($paidA, [$tx('a', 'reverted', 55000)], 100) === ['status' => 'pending', 'paid_tx_id' => null, 'received_cents' => null, 'paid_at' => null]);
+$manual = array_merge($base, ['status' => 'paid', 'paid_tx_id' => null, 'paid_at' => 50]);
+check('pagato a mano (senza transazione): mai toccato', hodbook_booking_evaluate($manual, [$tx('b', 'reverted', 55000)], 100) === []);
+check('due bonifici parziali completati -> review con il totale', hodbook_booking_evaluate($base, [$tx('a', 'completed', 20000), $tx('b', 'completed', 35000)], 100)
+    === ['status' => 'review', 'received_cents' => 55000]);
+check('importo esatto ma in altra valuta -> review senza importo', hodbook_booking_evaluate($base, [$tx('a', 'completed', 55000, 1, 'GBP')], 100) === ['status' => 'review']);
+check('review + pending: review ha la precedenza', hodbook_booking_evaluate($base, [$tx('a', 'completed', 100), $tx('b', 'pending', 55000)], 100) === ['status' => 'review', 'received_cents' => 100]);
+
+/* =================================================================== */
+section('Pulizia periodica');
+$old = $now - 366 * 86400;
+$oldPending = new_booking();
+$oldPaid = new_booking();
+$oldReview = new_booking();
+$recent = new_booking();
+$DB->prepare('UPDATE bookings SET created_at = :t WHERE id IN (:a, :b, :c)')->execute([':t' => $old, ':a' => $oldPending['id'], ':b' => $oldPaid['id'], ':c' => $oldReview['id']]);
+$DB->prepare("UPDATE bookings SET status = 'paid' WHERE id = :id")->execute([':id' => $oldPaid['id']]);
+$DB->prepare("UPDATE bookings SET status = 'review' WHERE id = :id")->execute([':id' => $oldReview['id']]);
+$DB->prepare('INSERT INTO revolut_transactions (tx_id, state, booking_id, created_at, updated_at) VALUES (:id, :s, :b, :t, :t)')
+   ->execute([':id' => $oldTx = tx_id(), ':s' => 'declined', ':b' => $oldPending['id'], ':t' => $old]);
+$DB->prepare('INSERT INTO revolut_transactions (tx_id, state, booking_id, created_at, updated_at) VALUES (:id, :s, NULL, :t, :t)')
+   ->execute([':id' => $strayTx = tx_id(), ':s' => 'completed', ':t' => $now - 91 * 86400]);
+$DB->prepare('INSERT INTO rate_limits (bucket, ts) VALUES (:b, :t), (:b, :t2)')->execute([':b' => 'vecchio', ':t' => $now - 90000, ':t2' => $now - 60]);
+$DB->prepare('INSERT INTO revolut_events (body_hash, event, received_at) VALUES (:h, :e, :t)')->execute([':h' => hash('sha256', 'vecchio'), ':e' => 'x', ':t' => $now - 91 * 86400]);
+hodbook_housekeeping($DB, $now, true);
+check('non pagata più vecchia di 12 mesi: cancellata', bk($oldPending) === null);
+check('...con le sue transazioni', txrow($oldTx) === null);
+check('pagata vecchia: conservata', bk($oldPaid) !== null);
+check('in verifica vecchia: conservata', bk($oldReview) !== null);
+check('recente: conservata', bk($recent) !== null);
+check('contatori oltre 24 ore cancellati, recenti conservati', count_rows("SELECT COUNT(*) FROM rate_limits WHERE bucket = 'vecchio'") === 1);
+check('impronte webhook oltre 90 giorni cancellate', count_rows('SELECT COUNT(*) FROM revolut_events WHERE body_hash = :h', [':h' => hash('sha256', 'vecchio')]) === 0);
+check('transazioni non abbinate oltre 90 giorni cancellate', txrow($strayTx) === null);
+
+/* =================================================================== */
+if ($withHttp) {
+    section('Percorso HTTP con il server PHP integrato');
+    if (!function_exists('curl_init')) {
+        check('cURL disponibile per il test HTTP', false, 'estensione curl mancante');
+    } else {
+        $allHeaders = [];
+
+        $startServer = static function (string $privateDir) use ($siteDir): array {
+            $probe = stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+            $name = $probe ? (string)stream_socket_get_name($probe, false) : '';
+            if ($probe) {
+                fclose($probe);
+            }
+            $port = (int)substr($name, (int)strrpos($name, ':') + 1) ?: random_int(20000, 40000);
+            $cmd = [PHP_BINARY];
+            if (php_ini_loaded_file() === false) {
+                /* Nessun php.ini: si ripassano le estensioni caricate in questo processo. */
+                array_push($cmd, '-n', '-d', 'extension_dir=' . ini_get('extension_dir'));
+                foreach (['curl', 'openssl', 'pdo_sqlite', 'mbstring'] as $ext) {
+                    if (extension_loaded($ext)) {
+                        array_push($cmd, '-d', 'extension=' . $ext);
+                    }
+                }
+            }
+            array_push($cmd, '-S', '127.0.0.1:' . $port, '-t', $siteDir);
+            $log = $privateDir . '/server.log';
+            $env = array_merge(getenv(), ['HODBOOK_PRIVATE_DIR' => $privateDir]);
+            $proc = proc_open($cmd, [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $pipes, null, $env);
+            $deadline = microtime(true) + 10;
+            while (microtime(true) < $deadline) {
+                $s = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.2);
+                if ($s) {
+                    fclose($s);
+                    break;
+                }
+                usleep(100000);
+            }
+            return ['proc' => $proc, 'pipes' => $pipes, 'base' => 'http://127.0.0.1:' . $port, 'log' => $log];
+        };
+
+        $http = static function (string $method, string $url, array $opts = []) use (&$allHeaders): array {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_CUSTOMREQUEST => $method, CURLOPT_TIMEOUT => 20,
+                CURLOPT_HTTPHEADER => array_merge(['Expect:'], $opts['headers'] ?? []),
+            ]);
+            if (isset($opts['body'])) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $opts['body']);
+            }
+            $raw = (string)curl_exec($ch);
+            $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            $hsize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            unset($ch);
+            $headers = substr($raw, 0, $hsize);
+            $allHeaders[] = $headers;
+            return ['code' => $code, 'headers' => $headers, 'body' => substr($raw, $hsize)];
+        };
+        $header = static function (array $r, string $name): string {
+            return preg_match('/^' . preg_quote($name, '/') . ':\s*(.*?)\r?$/mi', $r['headers'], $m) ? trim($m[1]) : '';
+        };
+        $tokenFrom = static function (string $html): string {
+            return preg_match('/name="token" value="(\d+\.[a-f0-9]{64})"/', $html, $m) ? $m[1] : '';
+        };
+
+        $srv = $servers[] = $startServer($tmp);
+        $base = $srv['base'];
+
+        /* --- prenota.php --- */
+        $r = $http('GET', $base . '/prenota.php');
+        check('GET prenota.php senza tipo -> 200 elenco dei 5 cuccioli', $r['code'] === 200 && !str_contains($r['body'], '<form')
+            && substr_count($r['body'], 'class="choice" href="prenota.php?tipo=') === 5 && str_contains($r['body'], 'href="prenota.php?tipo=bassotto-cioccolato"'), 'HTTP ' . $r['code']);
+        check('intestazioni: nosniff, DENY, same-origin, no-store', $header($r, 'X-Content-Type-Options') === 'nosniff' && $header($r, 'X-Frame-Options') === 'DENY'
+            && $header($r, 'Referrer-Policy') === 'same-origin' && str_contains($header($r, 'Cache-Control'), 'no-store'));
+        check('meta robots noindex, nofollow', str_contains($r['body'], '<meta name="robots" content="noindex, nofollow">'));
+        check('stessa testa delle pagine legali', str_contains($r['body'], 'assets/css/custom.css') && str_contains($r['body'], 'assets/css/fonts.css')
+            && str_contains($r['body'], 'https://cdn.tailwindcss.com') && str_contains($r['body'], 'assets/img/favicon-32.png'));
+        $r = $http('GET', $base . '/prenota.php?tipo=gatto');
+        check('tipo sconosciuto -> elenco', $r['code'] === 200 && !str_contains($r['body'], '<form') && str_contains($r['body'], 'Quale cucciolo vuoi prenotare?'));
+
+        $r = $http('GET', $base . '/prenota.php?tipo=barboncino');
+        $formToken = $tokenFrom($r['body']);
+        check('GET con tipo -> modulo con nome prodotto e caparra', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"')
+            && str_contains($r['body'], 'Caparra Barboncino Toy') && str_contains($r['body'], '550,00 €'));
+        check('modulo: campi, honeypot, tipo e token', str_contains($r['body'], 'name="nome"') && str_contains($r['body'], 'name="cognome"') && str_contains($r['body'], 'name="email"')
+            && str_contains($r['body'], 'name="telefono"') && str_contains($r['body'], 'name="sito_web"') && str_contains($r['body'], 'name="tipo" value="barboncino"') && $formToken !== '');
+        check('modulo: condizioni in nuova scheda e informativa', (bool)preg_match('#<input[^>]+name="termini"[^>]+required#', $r['body'])
+            && str_contains($r['body'], 'Ho letto e accetto le <a href="termini.php" target="_blank" rel="noopener">Condizioni di vendita</a>') && str_contains($r['body'], 'href="privacy.php"'));
+        check('modulo: avviso caparra testuale', str_contains($r['body'], '<p class="warn">La caparra non è rimborsabile in caso di rinuncia. Prima del pagamento ti confermiamo sempre per iscritto cucciolo, prezzo totale, documenti e consegna.</p>'));
+        check('modulo: testo del bottone', str_contains($r['body'], '>Prenota e vedi i dati per il bonifico</button>'));
+
+        $goodPost = ['tipo' => 'barboncino', 'token' => $formToken, 'sito_web' => '', 'nome' => 'Maria', 'cognome' => "D'Angelo", 'email' => 'maria@example.com', 'telefono' => '333 123 4567', 'termini' => '1'];
+        $countBookings = static fn(): int => count_rows('SELECT COUNT(*) FROM bookings');
+        $n0 = $countBookings();
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost)]);
+        check('invio dopo meno di 2 secondi -> modulo di nuovo, nessuna prenotazione', $r['code'] === 200 && str_contains($r['body'], 'Un attimo') && $countBookings() === $n0);
+        check('...con lo stesso token e i dati conservati', $tokenFrom($r['body']) === $formToken && str_contains($r['body'], 'value="D&apos;Angelo"'));
+        usleep(2200000);
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['nome' => 'M', 'cognome' => 'Rossi<script>', 'email' => 'no', 'telefono' => '12', 'termini' => '']))]);
+        check('dati non validi -> errori per campo', $r['code'] === 200 && str_contains($r['body'], 'Il nome deve avere almeno 2 lettere.') && str_contains($r['body'], 'Il cognome può contenere solo lettere')
+            && str_contains($r['body'], 'L&apos;email non sembra valida') && str_contains($r['body'], 'Il numero di telefono non sembra valido') && str_contains($r['body'], 'Per prenotare devi accettare le Condizioni di vendita.'));
+        check('valori conservati ed escapati', str_contains($r['body'], 'value="Rossi&lt;script&gt;"') && !str_contains($r['body'], 'Rossi<script>') && str_contains($r['body'], 'aria-invalid="true"'));
+        check('nessuna prenotazione creata', $countBookings() === $n0);
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['sito_web' => 'http://spam.example']))]);
+        check('honeypot compilato -> messaggio generico, nessuna prenotazione', $r['code'] === 200 && str_contains($r['body'], 'Non è stato possibile completare la prenotazione') && $countBookings() === $n0);
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['token' => substr($formToken, 0, -1) . (str_ends_with($formToken, 'a') ? 'b' : 'a')]))]);
+        check('token alterato -> modulo di nuovo, nessuna prenotazione', $r['code'] === 200 && str_contains($r['body'], 'Non siamo riusciti a verificare il modulo') && $countBookings() === $n0);
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost), 'headers' => ['Sec-Fetch-Site: cross-site']]);
+        check('POST cross-site (Sec-Fetch-Site) -> 403', $r['code'] === 403 && $countBookings() === $n0);
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost), 'headers' => ['Origin: https://evil.example']]);
+        check('POST con Origin di un altro host -> 403', $r['code'] === 403 && $countBookings() === $n0);
+
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost), 'headers' => ['Origin: ' . $base, 'Sec-Fetch-Site: same-origin']]);
+        $location = $header($r, 'Location');
+        check('POST valido -> 303 verso prenotazione.php?c=<token>', $r['code'] === 303 && (bool)preg_match('#^prenotazione\.php\?c=[a-f0-9]{64}$#', $location), 'HTTP ' . $r['code'] . ' ' . $location);
+        check('una prenotazione creata', $countBookings() === $n0 + 1);
+        $bookingToken = substr($location, -64);
+
+        /* --- prenotazione.php --- */
+        $page = $base . '/' . $location;
+        $r = $http('GET', $page);
+        $refMatch = preg_match('/Prenotazione (HOD[' . HODBOOK_REF_ALPHABET . ']{6})</', $r['body'], $m) ? $m[1] : '';
+        check('pagina della prenotazione -> 200 con il codice', $r['code'] === 200 && $refMatch !== '', 'HTTP ' . $r['code']);
+        check('saluto, prodotto, caparra', str_contains($r['body'], 'Ciao Maria,') && str_contains($r['body'], 'Caparra Barboncino Toy') && str_contains($r['body'], '550,00 €'));
+        check('stato: In attesa del bonifico', str_contains($r['body'], 'In attesa del bonifico') && str_contains($r['body'], 'data-status="pending"'));
+        check('dati per il bonifico: intestatario, IBAN a gruppi, BIC, banca', str_contains($r['body'], 'Dati per il bonifico') && str_contains($r['body'], 'TITOLARE DI PROVA')
+            && str_contains($r['body'], 'IT60 X054 2811 1010 0000 0123 456') && str_contains($r['body'], 'REVOLT21') && str_contains($r['body'], '>Revolut<'));
+        check('Copia: IBAN senza spazi, importo 550,00, causale', str_contains($r['body'], 'data-copy="' . TEST_IBAN . '"') && str_contains($r['body'], 'data-copy="550,00"')
+            && str_contains($r['body'], 'data-copy="' . $refMatch . '"') && str_contains($r['body'], '>Copia</button>'));
+        check('istruzione sulla causale (testuale) e bonifico istantaneo', str_contains($r['body'], 'Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.')
+            && str_contains($r['body'], 'bonifico istantaneo'));
+        check('link da salvare con Copia link', str_contains($r['body'], 'Salva il link di questa pagina') && str_contains($r['body'], '>Copia link</button>')
+            && str_contains($r['body'], $base . '/prenotazione.php?c=' . $bookingToken));
+        check('WhatsApp con prodotto e codice nel messaggio', str_contains($r['body'], 'Avvisaci su WhatsApp')
+            && str_contains($r['body'], 'https://wa.me/393770876017?text=' . rawurlencode('Ciao! Ho prenotato sul sito: Caparra Barboncino Toy. Codice prenotazione: ' . $refMatch . '.')));
+        check('link a termini, privacy e ritorno al sito', str_contains($r['body'], 'href="termini.php"') && str_contains($r['body'], 'href="privacy.php"') && str_contains($r['body'], '← Torna al sito'));
+        check('script di supporto caricato', str_contains($r['body'], 'assets/js/prenota.js'));
+        check('nessun dato personale oltre al nome', !str_contains($r['body'], 'maria@example.com') && !str_contains($r['body'], '3331234567'));
+        check('intestazioni anche qui', $header($r, 'Referrer-Policy') === 'same-origin' && $header($r, 'X-Frame-Options') === 'DENY' && str_contains($header($r, 'Cache-Control'), 'no-store'));
+        $stored = hodbook_booking_by_token($DB, $bookingToken);
+        check('salvata con dati normalizzati', $stored !== null && $stored['reference'] === $refMatch && $stored['phone'] === '3331234567' && $stored['last_name'] === "D'Angelo");
+
+        $r = $http('GET', $page . '&format=json');
+        check('stato JSON -> {"status":"pending"} senza dati personali', $r['code'] === 200 && trim($r['body']) === '{"status":"pending"}'
+            && str_contains($header($r, 'Content-Type'), 'application/json') && str_contains($header($r, 'Cache-Control'), 'no-store'));
+        $r = $http('GET', $base . '/prenotazione.php?c=' . str_repeat('0', 64));
+        check('token sconosciuto -> 404 con messaggio', $r['code'] === 404 && str_contains($r['body'], 'Prenotazione non trovata') && str_contains($r['body'], 'href="./"'));
+        $r = $http('GET', $base . '/prenotazione.php?c=abc');
+        check('token malformato -> 404', $r['code'] === 404);
+        $r = $http('GET', $base . '/prenotazione.php?c=' . str_repeat('0', 64) . '&format=json');
+        check('token sconosciuto in JSON -> 404', $r['code'] === 404 && !str_contains($r['body'], 'status'));
+
+        /* --- webhook-revolut.php --- */
+        $r = $http('GET', $base . '/webhook-revolut.php');
+        check('GET sul webhook -> 405', $r['code'] === 405 && $header($r, 'Allow') === 'POST');
+        $txHttp = tx_id();
+        $rawEv = json_encode(ev_created($txHttp, 'completed', 550, 'EUR', 'caparra ' . strtolower($refMatch), now_us()), JSON_UNESCAPED_SLASHES);
+        $nowMs = (int)floor(microtime(true) * 1000);
+        $r = $http('POST', $base . '/webhook-revolut.php', ['body' => $rawEv, 'headers' => ['Content-Type: application/json',
+            'Revolut-Request-Timestamp: ' . $nowMs, 'Revolut-Signature: v1=' . hash_hmac('sha256', 'v1.' . $nowMs . '.' . $rawEv, $secretB)]]);
+        check('webhook con firma sbagliata -> 401', $r['code'] === 401 && !str_contains($r['body'], 'wsk_'));
+        check('stato invariato dopo il 401', trim($http('GET', $page . '&format=json')['body']) === '{"status":"pending"}');
+        $signed = sign($rawEv, $secretA, $nowMs);
+        $r = $http('POST', $base . '/webhook-revolut.php', ['body' => $rawEv, 'headers' => ['Content-Type: application/json',
+            'Revolut-Request-Timestamp: ' . $signed['Revolut-Request-Timestamp'], 'Revolut-Signature: ' . $signed['Revolut-Signature']]]);
+        check('webhook firmato -> 200 {"ok":true}', $r['code'] === 200 && trim($r['body']) === '{"ok":true}', 'HTTP ' . $r['code'] . ' ' . $r['body']);
+        $r = $http('GET', $page . '&format=json');
+        check('stato JSON -> paid', trim($r['body']) === '{"status":"paid"}', $r['body']);
+        $r = $http('GET', $page);
+        check('pagina: Caparra ricevuta. Grazie! con data, senza dati per il bonifico', str_contains($r['body'], 'Caparra ricevuta. Grazie!') && str_contains($r['body'], 'Caparra ricevuta il ')
+            && !str_contains($r['body'], 'Dati per il bonifico') && !str_contains($r['body'], 'IT60 X054') && str_contains($r['body'], 'data-status="paid"'));
+        $r = $http('POST', $base . '/webhook-revolut.php', ['body' => $rawEv, 'headers' => ['Content-Type: application/json',
+            'Revolut-Request-Timestamp: ' . $signed['Revolut-Request-Timestamp'], 'Revolut-Signature: ' . $signed['Revolut-Signature']]]);
+        check('webhook ripetuto -> 200, nessun effetto', $r['code'] === 200 && trim($http('GET', $page . '&format=json')['body']) === '{"status":"paid"}');
+        $r = $http('POST', $base . '/webhook-revolut.php', ['body' => str_repeat('{', 70000), 'headers' => ['Content-Type: application/json']]);
+        check('webhook oltre 64 KB -> 413', $r['code'] === 413);
+        $log = (string)@file_get_contents($tmp . '/data/prenotazioni.log');
+        check('log privato: eventi senza dati personali né segreti', str_contains($log, 'webhook processed evento=TransactionCreated tx=' . $txHttp) && str_contains($log, 'stato=paid')
+            && !str_contains($log, 'maria@example.com') && !str_contains($log, 'Maria') && !str_contains($log, $secretA) && !str_contains($log, 'D\'Angelo'));
+
+        /* --- limite di frequenza: finora 5 POST contati (troppo presto, errori, honeypot, token alterato, valido) --- */
+        $codes = [];
+        for ($i = 0; $i < 4; $i++) {
+            $codes[] = $http('POST', $base . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['email' => 'no']))])['code'];
+        }
+        check('limite: 8 POST l\'ora, il 9° -> 429', $codes === [200, 200, 200, 429], implode(',', $codes));
+        $r = $http('POST', $base . '/prenota.php', ['body' => http_build_query($goodPost)]);
+        check('pagina 429 con WhatsApp e nessuna prenotazione', $r['code'] === 429 && str_contains($r['body'], 'Troppi tentativi') && str_contains($r['body'], 'https://wa.me/393770876017') && $countBookings() === $n0 + 1);
+        $r = $http('GET', $base . '/prenota.php?tipo=maltese');
+        check('il limite vale solo per gli invii: la pagina si apre', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"'));
+
+        $r = $http('GET', $base . '/assets/js/prenota.js');
+        check('prenota.js servito e senza localStorage', $r['code'] === 200 && str_contains($r['body'], 'data-copy') && !str_contains($r['body'], 'localStorage') && !str_contains($r['body'], 'document.cookie'));
+
+        /* --- seconda istanza: banca e webhook non configurati --- */
+        $tmp2 = $tmp . '/senza-banca';
+        mkdir($tmp2 . '/config', 0700, true);
+        mkdir($tmp2 . '/data', 0700, true);
+        write_config($tmp2, ['bank_account_holder' => 'X', 'bank_iban' => 'IT00X0000000000000000000000']);
+        $srv2 = $servers[] = $startServer($tmp2);
+        $r = $http('GET', $srv2['base'] . '/prenota.php?tipo=maltese');
+        check('banca non configurata: 200, niente modulo, WhatsApp', $r['code'] === 200 && !str_contains($r['body'], '<form') && str_contains($r['body'], 'non è disponibile')
+            && str_contains($r['body'], 'https://wa.me/393770876017?text=' . rawurlencode('Ciao! Vorrei prenotare: Caparra Maltese Toy.')));
+        $r = $http('GET', $srv2['base'] . '/prenota.php');
+        check('banca non configurata, senza tipo: stesso messaggio', $r['code'] === 200 && !str_contains($r['body'], '<form') && str_contains($r['body'], 'Prenota su WhatsApp'));
+        $r = $http('POST', $srv2['base'] . '/prenota.php', ['body' => http_build_query($goodPost)]);
+        check('banca non configurata: POST non crea nulla', $r['code'] === 200 && !str_contains($r['body'], '<form') && !is_file($tmp2 . '/data/prenotazioni.sqlite'));
+        $r = $http('POST', $srv2['base'] . '/webhook-revolut.php', ['body' => $rawEv, 'headers' => ['Content-Type: application/json',
+            'Revolut-Request-Timestamp: ' . $signed['Revolut-Request-Timestamp'], 'Revolut-Signature: ' . $signed['Revolut-Signature']]]);
+        check('webhook senza segreto -> 503', $r['code'] === 503);
+
+        $cookies = array_filter($allHeaders, static fn(string $h): bool => (bool)preg_match('/^Set-Cookie:/mi', $h));
+        check('nessun Set-Cookie in ' . count($allHeaders) . ' risposte', $cookies === [] && count($allHeaders) > 30);
+
+        foreach ($servers as $s) {
+            if (is_resource($s['proc'])) {
+                proc_terminate($s['proc']);
+                proc_close($s['proc']);
+            }
+        }
+        $serverLog = (string)@file_get_contents($srv['log']) . (string)@file_get_contents($srv2['log']);
+        check('server: nessun errore PHP', !preg_match('/PHP (Warning|Notice|Deprecated|Fatal|Parse)/', $serverLog), substr($serverLog, 0, 300));
+        $errLog2 = (string)@file_get_contents($tmp2 . '/data/php-errors.log');
+        check('seconda istanza: log errori PHP vuoto', trim($errLog2) === '', substr($errLog2, 0, 300));
+    }
+}
+
+/* =================================================================== */
+section('Log degli errori PHP');
+$errLog = (string)@file_get_contents(HODBOOK_DATA_DIR . '/php-errors.log');
+$unexpected = array_filter(explode("\n", trim($errLog)), static fn(string $l): bool => $l !== '' && !str_contains($l, '[hodbook] webhook: PDOException'));
+check('nessun avviso o errore PHP inatteso', $unexpected === [], substr(implode("\n", $unexpected), 0, 500));
+
+echo "\nRisultato: $pass ok, $fail falliti\n";
+exit($fail === 0 ? 0 : 1);

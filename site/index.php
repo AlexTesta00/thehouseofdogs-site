@@ -274,8 +274,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Il piccolo genio di casa: attento, elegante, sempre in sintonia con te.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Barboncino%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- SHOPIFY (checkout LIVE): CAPARRA BARBONCINO TOY -->
-              <a id="prenota-barboncino" href="https://gmau2p-qx.myshopify.com/cart/58503904952702:1" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- PRENOTAZIONE CON BONIFICO (prenota.php): CAPARRA BARBONCINO TOY -->
+              <a id="prenota-barboncino" href="prenota.php?tipo=barboncino" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -295,8 +295,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Morbido e affettuoso, nato per stare in braccio. Le nostre cucciolate sono italiane, da genitori selezionati.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Maltipoo%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- SHOPIFY (checkout LIVE): CAPARRA MALTIPO TOY -->
-              <a id="prenota-maltipoo" href="https://gmau2p-qx.myshopify.com/cart/58504182858110:1" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- PRENOTAZIONE CON BONIFICO (prenota.php): CAPARRA MALTIPOO TOY -->
+              <a id="prenota-maltipoo" href="prenota.php?tipo=maltipoo" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -316,8 +316,8 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Compagno storico dei salotti italiani: pulito, silenzioso, devoto.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Maltese%20Toy%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- SHOPIFY (checkout LIVE): CAPARRA MALTESE TOY -->
-              <a id="prenota-maltese" href="https://gmau2p-qx.myshopify.com/cart/57529557483902:1" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
+              <!-- PRENOTAZIONE CON BONIFICO (prenota.php): CAPARRA MALTESE TOY -->
+              <a id="prenota-maltese" href="prenota.php?tipo=maltese" class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</a>
             </div>
           </div>
         </article>
@@ -337,12 +337,12 @@ $formErrore  = isset($_GET['errore']);
             <p class="mt-4 text-sm text-inksoft">Il più piccolo dei bassotti: curioso, buffo, incollato a te.</p>
             <div class="mt-5 flex flex-wrap items-start gap-2.5">
               <a href="https://wa.me/393770876017?text=Ciao!%20Vorrei%20informazioni%20sui%20cuccioli%20di%20Bassotto%20Kaninchen%20disponibili." target="_blank" rel="noopener" class="btn btn-primary rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Chiedi disponibilità</a>
-              <!-- SHOPIFY (checkout LIVE): il Bassotto ha due varianti di colore, ARLECCHINO e CIOCCOLATO -->
+              <!-- PRENOTAZIONE CON BONIFICO (prenota.php): il Bassotto ha due varianti di colore, ARLECCHINO e CIOCCOLATO -->
               <details id="prenota-bassotto" class="prenota-variants">
                 <summary class="btn btn-outline rounded-full px-5 py-2.5 inline-flex text-sm font-semibold">Prenota</summary>
                 <div class="mt-2.5 flex flex-wrap gap-2">
-                  <a href="https://gmau2p-qx.myshopify.com/cart/58504175583614:1" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
-                  <a href="https://gmau2p-qx.myshopify.com/cart/58504172306814:1" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Cioccolato</a>
+                  <a href="prenota.php?tipo=bassotto-arlecchino" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Arlecchino</a>
+                  <a href="prenota.php?tipo=bassotto-cioccolato" class="btn btn-outline rounded-full px-4 py-2 inline-flex text-xs font-semibold">Cioccolato</a>
                 </div>
               </details>
             </div>
@@ -350,7 +350,7 @@ $formErrore  = isset($_GET['errore']);
         </article>
       </div>
 
-      <p class="reveal mt-8 text-sm text-inksoft max-w-3xl"><span class="part">Con il bottone <strong>Prenota</strong> versi una caparra di prenotazione su pagine di pagamento sicure Shopify. Prima ti confermiamo sempre tutto per iscritto: cucciolo, prezzo totale, documenti e consegna. <strong>La caparra non è rimborsabile</strong> in caso di rinuncia. La prenotazione è regolata dalle nostre <a href="termini.php" class="underline underline-offset-2 text-accent">Condizioni di vendita</a>.</span></p>
+      <p class="reveal mt-8 text-sm text-inksoft max-w-3xl"><span class="part">Con il bottone <strong>Prenota</strong> prenoti online e versi la caparra di prenotazione con bonifico bancario. Prima ti confermiamo sempre tutto per iscritto: cucciolo, prezzo totale, documenti e consegna. <strong>La caparra non è rimborsabile</strong> in caso di rinuncia. La prenotazione è regolata dalle nostre <a href="termini.php" class="underline underline-offset-2 text-accent">Condizioni di vendita</a>.</span></p>
     </div>
   </section>
 

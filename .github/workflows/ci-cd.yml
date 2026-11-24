@@ -1,6 +1,7 @@
 # CI/CD House of Dogs
-# A ogni push su main: controlla la sintassi PHP, esegue i test dell'app pagamenti e carica via FTP su Hostinger
-# la cartella site/ (document root) e l'app pagamenti (payments/public -> payments/, parte privata -> payments-private/).
+# A ogni push su main: controlla la sintassi PHP, esegue i test dell'app pagamenti e delle prenotazioni con bonifico
+# e carica via FTP su Hostinger la cartella site/ (document root) e l'app pagamenti (payments/public -> payments/,
+# parte privata -> payments-private/).
 #
 # Segreti da creare su GitHub (Settings > Secrets and variables > Actions > New repository secret):
 #   FTP_SERVER    -> host FTP di Hostinger (hPanel > Siti web > Gestisci > File > Account FTP, es. ftp.tuodominio.it o un IP)
@@ -15,6 +16,19 @@
 # Segreto per l'app pagamenti:
 #   PAYMENTS_MOLLIE_API_KEY -> chiave API Mollie (test_... o live_...). Il deploy genera config.php sul server da questo
 #                              segreto; la chiave non passa mai dal repository.
+# Segreti per le prenotazioni con bonifico (site/prenota.php; parte privata in site/_prenotazioni/, bloccata dal web):
+#   BOOKING_IBAN            -> IBAN del conto Revolut Business su cui arrivano le caparre (con o senza spazi).
+#                              Prima del deploy viene controllato con mod-97: se non è valido il deploy si ferma.
+#   BOOKING_ACCOUNT_HOLDER  -> intestatario del conto, mostrato al cliente nei dati per il bonifico.
+#   BOOKING_BIC             -> facoltativo: BIC/SWIFT da mostrare al cliente (8 o 11 caratteri).
+#   REVOLUT_WEBHOOK_SECRET  -> segreto di firma del webhook Revolut (inizia con wsk_). Per ruotarlo senza interruzioni
+#                              si possono indicare più segreti separati da virgola.
+#   Il deploy genera site/_prenotazioni/config/config.php da questi segreti: i valori non passano mai dal repository
+#   e non vengono mai stampati nel log. Senza IBAN o intestatario il file non viene generato e prenota.php propone la
+#   prenotazione via WhatsApp; senza REVOLUT_WEBHOOK_SECRET si prenota lo stesso, ma lo stato non si aggiorna da solo.
+#   Webhook da registrare in Revolut Business (Business API, Webhooks v2):
+#     URL:    https://www.thehouseofdog.it/webhook-revolut.php
+#     Eventi: TransactionCreated e TransactionStateChanged
 
 name: Deploy su Hostinger
 
@@ -44,15 +58,19 @@ jobs:
       - name: Lint di tutti i file PHP
         run: |
           set -e
-          find site payments -name '*.php' -print0 | xargs -0 -n1 php -l
+          find site payments tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Test automatici app pagamenti
         run: php payments/tools/selftest.php --http
 
+      - name: Test automatici prenotazioni con bonifico
+        run: php tests/prenotazioni-selftest.php --http
+
       - name: Controllo asset essenziali
         run: |
           set -e
-          for f in site/index.php site/invia.php site/assets/hero-scrub.mp4 site/assets/hero-ambient.mp4 site/assets/css/custom.css site/assets/js/hero.js; do
+          for f in site/index.php site/invia.php site/assets/hero-scrub.mp4 site/assets/hero-ambient.mp4 site/assets/css/custom.css site/assets/js/hero.js \
+                   site/prenota.php site/prenotazione.php site/webhook-revolut.php site/assets/js/prenota.js site/_prenotazioni/.htaccess; do
             [ -s "$f" ] || { echo "Manca o e' vuoto: $f"; exit 1; }
           done
           echo "Asset ok"
@@ -64,6 +82,50 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # ---- Prenotazioni con bonifico (site/_prenotazioni/) ----
+      # config.php (IBAN, intestatario, BIC, segreto del webhook Revolut) viene generato qui dai segreti del repository
+      # e caricato insieme a site/. I valori non vengono mai stampati: il log riporta solo quali chiavi sono state scritte.
+      # Senza BOOKING_IBAN o BOOKING_ACCOUNT_HOLDER il file non viene scritto (prenota.php mostra il ripiego WhatsApp).
+      # Database, log e segreto applicativo che l'app crea sul server in _prenotazioni/data/ sono esclusi dal caricamento.
+      - name: Prepara configurazione prenotazioni
+        env:
+          BOOKING_IBAN: ${{ secrets.BOOKING_IBAN }}
+          BOOKING_ACCOUNT_HOLDER: ${{ secrets.BOOKING_ACCOUNT_HOLDER }}
+          BOOKING_BIC: ${{ secrets.BOOKING_BIC }}
+          REVOLUT_WEBHOOK_SECRET: ${{ secrets.REVOLUT_WEBHOOK_SECRET }}
+        run: |
+          set -e
+          rm -f site/_prenotazioni/config/config.php
+          php -r '
+            require "site/_prenotazioni/lib/validation.php";
+            $iban = hodbook_iban_normalize((string)getenv("BOOKING_IBAN"));
+            $holder = trim((string)preg_replace("/\s+/", " ", (string)getenv("BOOKING_ACCOUNT_HOLDER")));
+            if ($iban === "" || $holder === "") {
+              echo "BOOKING_IBAN o BOOKING_ACCOUNT_HOLDER assente: config.php prenotazioni non generato (prenotazione online spenta, resta WhatsApp).\n";
+              exit(0);
+            }
+            if (!hodbook_iban_valid($iban)) { fwrite(STDERR, "BOOKING_IBAN non valido: controllo mod-97 o lunghezza non superati.\n"); exit(1); }
+            $cfg = ["bank_account_holder" => $holder, "bank_iban" => $iban];
+            $set = ["bank_account_holder", "bank_iban"];
+            $bic = strtoupper((string)preg_replace("/\s+/", "", (string)getenv("BOOKING_BIC")));
+            if ($bic !== "") {
+              if (!hodbook_bic_valid($bic)) { fwrite(STDERR, "BOOKING_BIC non ha il formato atteso (8 o 11 caratteri).\n"); exit(1); }
+              $cfg["bank_bic"] = $bic;
+              $set[] = "bank_bic";
+            }
+            $secrets = preg_split("/[\s,]+/", (string)getenv("REVOLUT_WEBHOOK_SECRET"), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            foreach ($secrets as $s) {
+              if (!hodbook_webhook_secret_valid($s)) { fwrite(STDERR, "REVOLUT_WEBHOOK_SECRET non valido: ogni segreto deve iniziare con wsk_ (formato dei segreti di firma Revolut).\n"); exit(1); }
+            }
+            if ($secrets !== []) {
+              $cfg["revolut_webhook_secrets"] = array_values(array_unique($secrets));
+              $set[] = "revolut_webhook_secrets (" . count($cfg["revolut_webhook_secrets"]) . ")";
+            }
+            file_put_contents("site/_prenotazioni/config/config.php", "<?php\n/* Generato dal deploy GitHub: non modificare a mano, cambia i segreti del repository. */\nreturn " . var_export($cfg, true) . ";\n");
+            echo "config.php prenotazioni generato con: " . implode(", ", $set) . "\n";
+            if ($secrets === []) { echo "Attenzione: REVOLUT_WEBHOOK_SECRET assente, il webhook risponde 503 e lo stato delle prenotazioni non si aggiorna da solo.\n"; }
+          '
 
       - name: Carica site/ su Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -82,6 +144,9 @@ jobs:
             **/.git*
             **/.git*/**
             **/.ht_richieste.log
+            **/_prenotazioni/data/*.sqlite*
+            **/_prenotazioni/data/*.log
+            **/_prenotazioni/data/app-secret.php
             **/Thumbs.db
             **/.DS_Store
 

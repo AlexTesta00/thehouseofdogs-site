@@ -45,7 +45,7 @@
   <a href="./" class="text-sm underline underline-offset-4" style="color:var(--accent)">← Torna al sito</a>
   <p class="font-monolabel text-xs mt-8" style="color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase">INFORMATIVA PRIVACY E COOKIE</p>
   <h1 class="font-display text-4xl mt-3">Come trattiamo i tuoi dati</h1>
-  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 19 novembre 2026.</p>
+  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 24 novembre 2026.</p>
 
   <nav class="toc mt-8 p-5 rounded-2xl" style="background:var(--panel);border:1px solid rgba(74,96,121,.2)" aria-label="Indice">
     <p class="font-semibold mb-2">Indice</p>
@@ -79,11 +79,13 @@
   <p>I sistemi informatici che fanno funzionare il sito raccolgono, nel normale esercizio, alcuni dati la cui trasmissione è implicita nell'uso di Internet: indirizzo IP, tipo di browser e sistema operativo, pagina richiesta, data e ora, dimensione della risposta. Sono dati tecnici, conservati dal fornitore di hosting nei log del server per motivi di sicurezza e per rilevare eventuali abusi, e non vengono associati a persone identificate se non in caso di accertamento di responsabilità per reati informatici.</p>
   <h3>b) Dati che ci fornisci con il modulo di contatto</h3>
   <p>Nome, telefono, email, tipo di cucciolo di interesse e contenuto del messaggio. Il modulo contiene un campo nascosto anti-spam (honeypot) che non raccoglie dati delle persone.</p>
-  <h3>c) Dati di contatto via WhatsApp, telefono ed email</h3>
+  <h3>c) Dati che ci fornisci con il modulo di prenotazione online</h3>
+  <p>Se prenoti un cucciolo dal sito con il bottone Prenota: nome, cognome, email, telefono, tipo di cucciolo scelto, codice di prenotazione assegnato e data e ora in cui hai accettato le condizioni di vendita. Questi dati vengono salvati sul server che ospita il sito, insieme allo stato della prenotazione (in attesa del bonifico, bonifico in arrivo, caparra ricevuta). Per prevenire abusi, l'indirizzo IP da cui viene inviato il modulo viene conservato solo in forma pseudonimizzata (hash con chiave segreta) e cancellato entro 24 ore. Il modulo contiene un campo nascosto anti-spam (honeypot) che non raccoglie dati delle persone.</p>
+  <h3>d) Dati di contatto via WhatsApp, telefono ed email</h3>
   <p>Se ci scrivi su WhatsApp, ci chiami o ci mandi un'email, trattiamo il tuo numero o indirizzo e il contenuto della conversazione, incluse foto e video che ci invii.</p>
-  <h3>d) Dati relativi al pagamento</h3>
-  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) sono gestiti da <strong>Shopify</strong> su pagine di pagamento di Shopify. I dati della carta o dello strumento di pagamento non transitano mai sul nostro sito e non li conosciamo. Da Shopify riceviamo conferma dell'avvenuto pagamento, importo, data e i dati indicati in fase di pagamento (nome, email, telefono e indirizzo).</p>
-  <h3>e) Dati contrattuali e di consegna</h3>
+  <h3>e) Dati relativi al pagamento</h3>
+  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) avvengono con <strong>bonifico bancario</strong> sul nostro conto aziendale. Non riceviamo né trattiamo i dati di carte di pagamento. Dalla banca riceviamo i dati del bonifico: nome di chi lo dispone, IBAN di provenienza, importo, data e causale, anche tramite una notifica automatica che ci permette di abbinare il bonifico alla prenotazione.</p>
+  <h3>f) Dati contrattuali e di consegna</h3>
   <p>Per concludere la vendita e consegnare il cucciolo trattiamo dati anagrafici, indirizzo di consegna, codice fiscale e copia di un documento d'identità, richiesti al momento della prenotazione e necessari per l'accordo scritto, per la fatturazione e per la registrazione del passaggio di proprietà all'anagrafe degli animali d'affezione, come prevede la legge. Se scegli di pagare il saldo con un finanziamento, la richiesta viene gestita direttamente dalla finanziaria convenzionata, che tratta i tuoi dati come titolare autonomo secondo la propria informativa.</p>
 
   <h2 id="finalita">3. Finalità e basi giuridiche</h2>
@@ -103,7 +105,7 @@
   <p>I dati possono essere trattati, per le sole finalità indicate, da:</p>
   <ul>
     <li><strong>Fornitore di hosting</strong> del sito, che conserva i log tecnici e ospita il modulo di contatto (responsabile del trattamento).</li>
-    <li><strong>Shopify International Limited</strong> (Irlanda) per le pagine di pagamento e l'elaborazione dei pagamenti, anche tramite i propri fornitori di servizi di pagamento. Shopify tratta i dati secondo la propria informativa: <a href="https://www.shopify.com/it/legal/privacy" rel="noopener" target="_blank">shopify.com/it/legal/privacy</a>.</li>
+    <li><strong>Revolut</strong>, la banca presso cui abbiamo il conto aziendale: riceve i bonifici e ci invia le relative notifiche, anche automatiche.</li>
     <li><strong>Microsoft</strong> (servizio di posta Outlook) per la ricezione e l'invio delle email.</li>
     <li><strong>Meta Platforms Ireland Ltd.</strong> se scegli di contattarci tramite WhatsApp: le conversazioni sono soggette anche ai termini e all'informativa di WhatsApp.</li>
     <li><strong>Veterinari</strong> e <strong>anagrafe degli animali d'affezione / ASL</strong> per i documenti sanitari e il passaggio di proprietà (obbligo di legge).</li>
@@ -114,11 +116,12 @@
   <p>I dati non vengono diffusi né venduti a terzi.</p>
 
   <h2 id="extraue">5. Trasferimenti fuori dall'Unione Europea</h2>
-  <p>Alcuni fornitori (Shopify, Microsoft, Meta) possono trasferire dati verso gli Stati Uniti. In tal caso il trasferimento avviene sulla base della decisione di adeguatezza della Commissione Europea per il quadro EU-US Data Privacy Framework, quando il fornitore vi aderisce, oppure delle clausole contrattuali standard approvate dalla Commissione, con le garanzie aggiuntive previste dal GDPR.</p>
+  <p>Alcuni fornitori (Microsoft, Meta) possono trasferire dati verso gli Stati Uniti. In tal caso il trasferimento avviene sulla base della decisione di adeguatezza della Commissione Europea per il quadro EU-US Data Privacy Framework, quando il fornitore vi aderisce, oppure delle clausole contrattuali standard approvate dalla Commissione, con le garanzie aggiuntive previste dal GDPR.</p>
 
   <h2 id="conservazione">6. Per quanto tempo conserviamo i dati</h2>
   <ul>
     <li><strong>Richieste di informazioni senza seguito</strong>: fino a 12 mesi dall'ultimo contatto, poi vengono cancellate.</li>
+    <li><strong>Prenotazioni online non confermate</strong> (caparra non ricevuta): vengono cancellate dal server dopo 12 mesi dalla prenotazione. Le prenotazioni con caparra ricevuta seguono la regola dei dati contrattuali indicata qui sotto.</li>
     <li><strong>Dati contrattuali, di pagamento e di consegna</strong>: 10 anni dalla conclusione del contratto, per gli obblighi civilistici e fiscali (art. 2220 c.c.).</li>
     <li><strong>Log tecnici del server</strong>: per il tempo strettamente necessario alla sicurezza, di norma non oltre 12 mesi.</li>
     <li><strong>Richieste salvate temporaneamente sul server</strong> (solo se la posta elettronica non è disponibile al momento dell'invio): vengono trasferite alla casella email e cancellate dal server a cadenza regolare.</li>
@@ -145,18 +148,16 @@
   <p>Il sito e i servizi sono rivolti a persone maggiorenni. Non raccogliamo consapevolmente dati di minori di 18 anni; se un genitore o tutore ci segnala un trattamento di questo tipo, provvediamo alla cancellazione.</p>
 
   <h2 id="sicurezza">10. Sicurezza</h2>
-  <p>Il sito è servito tramite connessione cifrata (HTTPS). I dati del modulo vengono inviati alla nostra casella email e sono accessibili solo al titolare. Adottiamo misure tecniche e organizzative adeguate per proteggere i dati da accessi non autorizzati, perdita o distruzione. I pagamenti avvengono esclusivamente su infrastruttura Shopify, certificata PCI DSS.</p>
+  <p>Il sito è servito tramite connessione cifrata (HTTPS). I dati del modulo vengono inviati alla nostra casella email e sono accessibili solo al titolare. Adottiamo misure tecniche e organizzative adeguate per proteggere i dati da accessi non autorizzati, perdita o distruzione. I pagamenti avvengono con bonifico bancario disposto dal cliente tramite la propria banca: il sito non tratta mai dati di carte di pagamento.</p>
 
   <h2 id="cookie">11. Cookie policy</h2>
   <p>Questo sito <strong>non utilizza cookie propri</strong>: nessun cookie tecnico, nessun cookie di profilazione, nessun sistema di analisi statistica o di tracciamento pubblicitario. Non utilizza nemmeno tecnologie equivalenti (local storage, pixel di tracciamento, fingerprinting).</p>
   <p>Poiché il sito non installa cookie né strumenti di tracciamento, <strong>non è richiesto un banner di consenso</strong> ai sensi delle Linee guida del Garante per la protezione dei dati personali del 10 giugno 2021.</p>
   <p>Servizi di terze parti raggiungibili dal sito:</p>
   <ul>
-    <li><strong>Pagine di pagamento Shopify</strong>: si aprono sul dominio di Shopify, che può installare cookie tecnici e di sicurezza necessari al pagamento secondo la propria cookie policy: <a href="https://www.shopify.com/it/legal/cookies" rel="noopener" target="_blank">shopify.com/it/legal/cookies</a>.</li>
     <li><strong>WhatsApp</strong>: i collegamenti aprono l'app o il sito di WhatsApp, soggetti all'informativa di Meta.</li>
     <li><strong>Libreria grafica da CDN</strong> (cdn.tailwindcss.com): risorsa tecnica che non installa cookie sul tuo dispositivo.</li>
   </ul>
-  <p>Puoi comunque gestire o bloccare i cookie dalle impostazioni del tuo browser; le pagine di pagamento potrebbero non funzionare correttamente senza i cookie tecnici di Shopify.</p>
 
   <h2 id="modifiche">12. Modifiche a questa informativa</h2>
   <p>Possiamo aggiornare questa informativa per adeguarla a novità normative o a cambiamenti del servizio. La versione in vigore è sempre quella pubblicata su questa pagina, con la data di ultimo aggiornamento indicata in alto.</p>
