@@ -105,7 +105,7 @@
   <p>I dati possono essere trattati, per le sole finalità indicate, da:</p>
   <ul>
     <li><strong>Fornitore di hosting</strong> del sito, che conserva i log tecnici e ospita il modulo di contatto (responsabile del trattamento).</li>
-    <li><strong>Zurich Bank</strong>, la banca presso cui abbiamo il conto aziendale: riceve i bonifici e ci mette a disposizione i relativi dati.</li>
+    <li><strong>Revolut</strong>, la banca presso cui abbiamo il conto aziendale: riceve i bonifici e ci mette a disposizione i relativi dati.</li>
     <li><strong>Microsoft</strong> (servizio di posta Outlook) per la ricezione e l'invio delle email.</li>
     <li><strong>Meta Platforms Ireland Ltd.</strong> se scegli di contattarci tramite WhatsApp: le conversazioni sono soggette anche ai termini e all'informativa di WhatsApp.</li>
     <li><strong>Veterinari</strong> e <strong>anagrafe degli animali d'affezione / ASL</strong> per i documenti sanitari e il passaggio di proprietà (obbligo di legge).</li>
