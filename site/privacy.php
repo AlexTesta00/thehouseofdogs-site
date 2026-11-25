@@ -45,7 +45,7 @@
   <a href="./" class="text-sm underline underline-offset-4" style="color:var(--accent)">← Torna al sito</a>
   <p class="font-monolabel text-xs mt-8" style="color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase">INFORMATIVA PRIVACY E COOKIE</p>
   <h1 class="font-display text-4xl mt-3">Come trattiamo i tuoi dati</h1>
-  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 24 novembre 2026.</p>
+  <p class="mt-3 text-sm" style="color:var(--text-secondary)">Informativa resa ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018. Ultimo aggiornamento: 25 novembre 2026.</p>
 
   <nav class="toc mt-8 p-5 rounded-2xl" style="background:var(--panel);border:1px solid rgba(74,96,121,.2)" aria-label="Indice">
     <p class="font-semibold mb-2">Indice</p>
@@ -84,7 +84,7 @@
   <h3>d) Dati di contatto via WhatsApp, telefono ed email</h3>
   <p>Se ci scrivi su WhatsApp, ci chiami o ci mandi un'email, trattiamo il tuo numero o indirizzo e il contenuto della conversazione, incluse foto e video che ci invii.</p>
   <h3>e) Dati relativi al pagamento</h3>
-  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) avvengono con <strong>bonifico bancario</strong> sul nostro conto aziendale. Non riceviamo né trattiamo i dati di carte di pagamento. Dalla banca riceviamo i dati del bonifico: nome di chi lo dispone, IBAN di provenienza, importo, data e causale, anche tramite una notifica automatica che ci permette di abbinare il bonifico alla prenotazione.</p>
+  <p>I pagamenti (caparra di prenotazione ed eventuale saldo) avvengono con <strong>bonifico bancario</strong> sul nostro conto aziendale. Non riceviamo né trattiamo i dati di carte di pagamento. Dalla banca riceviamo i dati del bonifico: nome di chi lo dispone, IBAN di provenienza, importo, data e causale, che ci permettono di abbinare il bonifico alla prenotazione.</p>
   <h3>f) Dati contrattuali e di consegna</h3>
   <p>Per concludere la vendita e consegnare il cucciolo trattiamo dati anagrafici, indirizzo di consegna, codice fiscale e copia di un documento d'identità, richiesti al momento della prenotazione e necessari per l'accordo scritto, per la fatturazione e per la registrazione del passaggio di proprietà all'anagrafe degli animali d'affezione, come prevede la legge. Se scegli di pagare il saldo con un finanziamento, la richiesta viene gestita direttamente dalla finanziaria convenzionata, che tratta i tuoi dati come titolare autonomo secondo la propria informativa.</p>
 
@@ -105,7 +105,7 @@
   <p>I dati possono essere trattati, per le sole finalità indicate, da:</p>
   <ul>
     <li><strong>Fornitore di hosting</strong> del sito, che conserva i log tecnici e ospita il modulo di contatto (responsabile del trattamento).</li>
-    <li><strong>Revolut</strong>, la banca presso cui abbiamo il conto aziendale: riceve i bonifici e ci invia le relative notifiche, anche automatiche.</li>
+    <li><strong>Zurich Bank</strong>, la banca presso cui abbiamo il conto aziendale: riceve i bonifici e ci mette a disposizione i relativi dati.</li>
     <li><strong>Microsoft</strong> (servizio di posta Outlook) per la ricezione e l'invio delle email.</li>
     <li><strong>Meta Platforms Ireland Ltd.</strong> se scegli di contattarci tramite WhatsApp: le conversazioni sono soggette anche ai termini e all'informativa di WhatsApp.</li>
     <li><strong>Veterinari</strong> e <strong>anagrafe degli animali d'affezione / ASL</strong> per i documenti sanitari e il passaggio di proprietà (obbligo di legge).</li>

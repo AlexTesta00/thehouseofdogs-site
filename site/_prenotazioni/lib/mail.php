@@ -238,7 +238,9 @@ function hodbook_booking_messages(array $cfg, array $booking, string $token): ar
             HODBOOK_INSTANT_TRANSFER_RULE,
             'Scrivi nella causale solo il codice di prenotazione, senza altro testo.',
             '',
-            'Puoi controllare lo stato della prenotazione in qualsiasi momento da questa pagina:',
+            hodbook_webhook_configured($cfg)
+                ? 'Puoi controllare lo stato della prenotazione in qualsiasi momento da questa pagina:'
+                : 'Puoi ritrovare questi dati in qualsiasi momento da questa pagina:',
             $link,
             '',
             'La caparra non è rimborsabile in caso di rinuncia. La prenotazione è regolata dalle nostre Condizioni di vendita:',

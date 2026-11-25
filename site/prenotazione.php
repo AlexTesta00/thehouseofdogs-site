@@ -50,6 +50,9 @@ if ($json) {
 /* ---------- Pagina ---------- */
 
 $info = hodbook_status_info($status);
+/* Aggiornamento automatico dello stato: esiste solo se è configurato il webhook della banca. Senza, la pagina
+   non promette nulla che non possa mantenere: la ricezione viene confermata dal venditore. */
+$auto = hodbook_webhook_configured($cfg);
 $currency = (string)$booking['currency'];
 $amountCents = (int)$booking['amount_cents'];
 $amount = hodbook_format_amount($amountCents, $currency);
@@ -65,9 +68,11 @@ $explain = match ($status) {
     'review'   => '<p class="mt-2">Importo ricevuto: <strong class="nowrap">'
         . hodbook_e($booking['received_cents'] !== null ? hodbook_format_amount((int)$booking['received_cents'], $currency) : '-')
         . '</strong>. Importo della caparra: <strong class="nowrap">' . hodbook_e($amount) . '</strong>.</p>',
-    default    => '<p class="mt-2">Fai il bonifico istantaneo della caparra con i dati qui sotto: quando lo riceviamo, questa pagina lo mostra.</p>',
+    default    => $auto
+        ? '<p class="mt-2">Fai il bonifico istantaneo della caparra con i dati qui sotto: quando lo riceviamo, questa pagina lo mostra.</p>'
+        : '<p class="mt-2">Fai il bonifico istantaneo della caparra con i dati qui sotto. Appena lo vediamo sul conto ti confermiamo noi la ricezione, via email o WhatsApp.</p>',
 };
-$live = in_array($status, ['pending', 'incoming'], true)
+$live = $auto && in_array($status, ['pending', 'incoming'], true)
     ? '<p class="mt-2 text-sm" data-js-only hidden>La pagina controlla lo stato da sola ogni 20 secondi.</p>'
       . '<noscript><p class="mt-2 text-sm">Ricarica la pagina per vedere lo stato aggiornato.</p></noscript>'
     : '';
@@ -100,7 +105,9 @@ if ($status !== 'paid') {
         $bank = '<section class="box mt-6" aria-labelledby="bonifico">'
             . '<h2 id="bonifico">Dati per il bonifico</h2>'
             . '<p class="rule mt-4" id="regola-istantaneo">' . hodbook_e(HODBOOK_INSTANT_TRANSFER_RULE) . '</p>'
-            . '<p class="mt-3 text-sm">Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.</p>'
+            . '<p class="mt-3 text-sm">' . ($auto
+                ? 'Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.'
+                : 'Il bonifico istantaneo arriva sul nostro conto in pochi secondi.') . '</p>'
             . '<p class="mt-1 text-sm muted">Copia questi dati nell\'app o nel sito della tua banca.</p>'
             . '<dl class="kv mt-4">' . $rows . '</dl>'
             . '<p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p>'
@@ -113,7 +120,8 @@ if ($status !== 'paid') {
 
 $saveLink = '<section class="box mt-6" aria-labelledby="salva">'
     . '<h2 id="salva">Salva questo link</h2>'
-    . '<p class="mt-1 text-sm">Salva il link di questa pagina (nei preferiti o in una nota): ti serve per controllare lo stato della prenotazione quando vuoi.</p>'
+    . '<p class="mt-1 text-sm">Salva il link di questa pagina (nei preferiti o in una nota): ti serve per '
+    . ($auto ? 'controllare lo stato della prenotazione' : 'ritrovare i dati del bonifico') . ' quando vuoi.</p>'
     . '<p class="mt-3 text-sm copyable" style="overflow-wrap:anywhere;color:var(--text-secondary)">' . hodbook_e($pageUrl) . '</p>'
     . '<button type="button" class="copy-btn mt-3" data-copy="' . hodbook_e($pageUrl) . '" data-done="Link copiato" hidden>Copia link</button>'
     . '</section>';
@@ -145,5 +153,6 @@ $body = hodbook_back_link()
 $statusUrl = 'prenotazione.php?c=' . $token . '&format=json';
 hodbook_render_page('Prenotazione ' . $reference, $body, [
     'script' => true,
-    'attrs'  => ' data-status="' . hodbook_e($status) . '" data-status-url="' . hodbook_e($statusUrl) . '"',
+    /* Senza webhook lo stato non cambia da solo: niente interrogazioni periodiche dal browser. */
+    'attrs'  => $auto ? ' data-status="' . hodbook_e($status) . '" data-status-url="' . hodbook_e($statusUrl) . '"' : '',
 ]);

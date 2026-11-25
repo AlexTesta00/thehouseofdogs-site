@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 return [
     'bank_account_holder' => 'THE HOUSE OF DOG DI G.F.',
-    'bank_iban'           => 'LT35 3250 0558 4990 2257',
-    'bank_bic'            => 'REVOLT21',
-    'bank_name'           => 'Revolut',
+    'bank_iban'           => 'IT44 T036 6701 6000 1057 0279 542',
+    'bank_bic'            => '',
+    'bank_name'           => 'Zurich Bank',
 ];
