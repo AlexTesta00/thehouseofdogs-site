@@ -66,6 +66,7 @@ const TEST_IBAN = 'IT60X0542811101000000123456';   /* IBAN di esempio con cifre 
 const TEST_SITE_URL = 'https://prenota.example.test';   /* diverso dall'host del server di prova: i link delle email non vengono da Host */
 const TEST_MERCHANT = 'esercente@example.test';
 /* Codici fiscali calcolati con l'algoritmo ufficiale (verificato su codici pubblicati come validi: RSSMRA80A01H501U, CCCFBA85D03L219P). */
+const IBAN_2 = 'IT42A0366901600067012321526';   /* secondo conto (bank.php), valido */
 const CF_OK = 'RSSMRA80A01H501U';
 const CF_OK_2 = 'BNCLRA92M55A662S';     /* donna (giorno + 40) */
 
@@ -296,6 +297,50 @@ check('email: modalità OFF e File accettate', hodbook_config_normalize(['mail_m
 check('telefono mostrato: +39 377 087 6017 dal numero WhatsApp', hodbook_phone_display($def) === '+39 377 087 6017');
 check('telefono mostrato: contact_phone_display ha la precedenza', hodbook_phone_display(hodbook_config_normalize(['contact_phone_display' => '080 123 4567'])) === '080 123 4567');
 check('telefono mostrato: numero estero', hodbook_phone_display(hodbook_config_normalize(['whatsapp_number' => '4915112345678'])) === '+4915112345678');
+
+/* Più conti per il bonifico (bank_extra_accounts) */
+$extraAcc = ['bank_account_holder' => 'Giuseppe Falcicchio', 'bank_iban' => 'IT42 A036 6901 6000 6701 2321 526', 'bank_bic' => 'revoitm2', 'bank_name' => 'Revolut'];
+check('un solo conto: bank_accounts contiene il principale', $CFG['bank_accounts'] === [['holder' => 'TITOLARE DI PROVA', 'iban' => TEST_IBAN, 'bic' => 'REVOLT21', 'name' => 'Revolut']]);
+$c = hodbook_config_normalize(['bank_account_holder' => 'TITOLARE DI PROVA', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => [$extraAcc]]);
+check('conto extra valido: secondo nell\'elenco, normalizzato', $c['bank_accounts'] === [
+    ['holder' => 'TITOLARE DI PROVA', 'iban' => TEST_IBAN, 'bic' => '', 'name' => 'Revolut'],
+    ['holder' => 'Giuseppe Falcicchio', 'iban' => IBAN_2, 'bic' => 'REVOITM2', 'name' => 'Revolut']]);
+check('conto extra: le chiavi piatte restano quelle del conto principale', $c['bank_iban'] === TEST_IBAN && $c['bank_account_holder'] === 'TITOLARE DI PROVA'
+    && $c['bank_name'] === 'Revolut' && hodbook_bank_configured($c));
+$c = hodbook_config_normalize(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => [
+    array_merge($extraAcc, ['bank_iban' => 'IT42A0366901600067012321527']),
+    array_merge($extraAcc, ['bank_account_holder' => '   ']),
+    array_merge($extraAcc, ['bank_iban' => 'it60 x054 2811 1010 0000 0123 456']),
+    'non un conto',
+    null,
+]]);
+check('extra con IBAN non valido, intestatario vuoto, IBAN uguale al principale o non array: scartati',
+    count($c['bank_accounts']) === 1 && $c['bank_accounts'][0]['iban'] === TEST_IBAN);
+$c = hodbook_config_normalize(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => [$extraAcc, array_merge($extraAcc, ['bank_account_holder' => 'Altro nome'])]]);
+check('stesso IBAN in due conti extra: resta solo il primo', count($c['bank_accounts']) === 2 && $c['bank_accounts'][1]['holder'] === 'Giuseppe Falcicchio');
+$c = hodbook_config_normalize(['bank_account_holder' => 'X', 'bank_iban' => 'IT00X0000000000000000000000', 'bank_extra_accounts' => [$extraAcc]]);
+check('principale non valido + extra valido: prenotazione attiva con il solo extra', hodbook_bank_configured($c)
+    && count($c['bank_accounts']) === 1 && $c['bank_accounts'][0]['iban'] === IBAN_2 && $c['bank_iban'] === 'IT00X0000000000000000000000');
+$many = [];
+foreach (['GB82WEST12345698765432', 'LT121000011101001000', 'DE89370400440532013000', 'FR1420041010050500013M02606', 'NL91ABNA0417164300'] as $i => $iban) {
+    $many[] = ['bank_account_holder' => 'Conto prova ' . $i, 'bank_iban' => $iban];
+}
+$c = hodbook_config_normalize(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => $many]);
+check('al massimo 4 conti: il principale e i primi 3 extra validi', HODBOOK_MAX_BANK_ACCOUNTS === 4
+    && array_column($c['bank_accounts'], 'iban') === [TEST_IBAN, 'GB82WEST12345698765432', 'LT121000011101001000', 'DE89370400440532013000']);
+check('principale non valido: i primi 4 extra', array_column(hodbook_config_normalize(['bank_extra_accounts' => $many])['bank_accounts'], 'iban')
+    === ['GB82WEST12345698765432', 'LT121000011101001000', 'DE89370400440532013000', 'FR1420041010050500013M02606']);
+$c = hodbook_config_normalize(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => array_merge($extraAcc, ['bank_bic' => 'NON VALIDO', 'bank_name' => ''])]);
+check('un solo extra scritto senza la lista esterna; BIC non valido -> vuoto, banca vuota -> Revolut', count($c['bank_accounts']) === 2
+    && $c['bank_accounts'][1]['bic'] === '' && $c['bank_accounts'][1]['name'] === 'Revolut');
+check('bank_extra_accounts che non è una lista di conti: ignorato', hodbook_config_normalize(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => 'IT42'])['bank_accounts']
+    === [['holder' => 'A', 'iban' => TEST_IBAN, 'bic' => '', 'name' => 'Revolut']]);
+check('nessun conto valido: banca non configurata', !hodbook_bank_configured(hodbook_config_normalize(['bank_extra_accounts' => [array_merge($extraAcc, ['bank_iban' => 'IT42'])]])));
+check('configurazione non normalizzata: conti ricalcolati', count(hodbook_bank_accounts(['bank_account_holder' => 'A', 'bank_iban' => TEST_IBAN, 'bank_extra_accounts' => [$extraAcc]])) === 2);
+$bankFile = require $siteDir . '/_prenotazioni/config/bank.php';
+$realAccounts = is_array($bankFile) ? hodbook_config_normalize($bankFile)['bank_accounts'] : [];
+check('bank.php del repository: ogni conto elencato è valido (nessuno scartato in silenzio)', is_array($bankFile) && $realAccounts !== []
+    && count($realAccounts) === 1 + count(is_array($bankFile['bank_extra_accounts'] ?? null) ? $bankFile['bank_extra_accounts'] : []), count($realAccounts) . ' conti validi');
 
 /* =================================================================== */
 section('IBAN, BIC, importi');
@@ -617,9 +662,68 @@ check('cliente: link assoluto su site_url, condizioni, contatti, firma', str_con
     && str_contains($cu['body'], 'scrivici su WhatsApp al +39 377 087 6017.') && str_ends_with($cu['body'], "The House Of Dog\r\n\r\n"));
 check('cliente: niente dati che non lo riguardano', !str_contains($cu['body'], CF_OK_2) && !str_contains($cu['body'], 'Residenza'));
 $noBic = $CFG;
-$noBic['bank_bic'] = '';
+$noBic['bank_accounts'][0]['bic'] = '';
 [, $noBicCustomer] = hodbook_booking_messages($noBic, $mb, $mailToken);
 check('cliente: riga BIC solo se configurato', !str_contains($noBicCustomer['body'], 'BIC:') && str_contains($noBicCustomer['body'], "IBAN: IT60 X054 2811 1010 0000 0123 456\nBanca: Revolut\n"));
+
+/* Più conti: il cliente ne sceglie uno; con un conto solo il testo resta quello di sempre. */
+[$oneMerchant, $oneCustomer] = hodbook_booking_messages($CFG, $mb, $mailToken);
+check('un conto: nessuna traccia della scelta tra conti nelle email', !str_contains($oneCustomer['body'], 'Conto 1') && !str_contains($oneCustomer['body'], 'a tua scelta')
+    && !str_contains($oneMerchant['body'], 'conti:'));
+$twoCfg = $CFG;
+$twoCfg['bank_accounts'][] = ['holder' => 'Giuseppe Falcicchio', 'iban' => IBAN_2, 'bic' => 'REVOITM2', 'name' => 'Revolut'];
+[$twoMerchant, $twoCustomer] = hodbook_booking_messages($twoCfg, $mb, $mailToken);
+check('due conti, email al cliente: Conto 1 e Conto 2, poi importo e causale una volta sola', str_contains($twoCustomer['body'],
+    "DATI PER IL BONIFICO\nPuoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.\n\n"
+    . "Conto 1\nIntestatario: TITOLARE DI PROVA\nIBAN: IT60 X054 2811 1010 0000 0123 456\nBIC: REVOLT21\nBanca: Revolut\n\n"
+    . "Conto 2\nIntestatario: Giuseppe Falcicchio\nIBAN: IT42 A036 6901 6000 6701 2321 526\nBIC: REVOITM2\nBanca: Revolut\n\n"
+    . "Importo: 550,00 €\nCausale: $ref\n\nIMPORTANTE\n")
+    && substr_count($twoCustomer['body'], 'Importo: ') === 1 && substr_count($twoCustomer['body'], 'Causale: ') === 1);
+$cutBank = static fn(string $body): string => preg_replace('/DATI PER IL BONIFICO\n.*?\nCausale: [^\n]*\n/s', '[DATI]', $body) ?? '';
+check('due conti, email al cliente: oggetto e resto del testo identici al caso a un conto', $twoCustomer['subject'] === $oneCustomer['subject']
+    && $cutBank($twoCustomer['body']) === $cutBank($oneCustomer['body']) && $cutBank($oneCustomer['body']) !== $oneCustomer['body']);
+check('due conti, email all\'esercente: solo una riga in più con il numero dei conti', $twoMerchant['subject'] === $oneMerchant['subject']
+    && $twoMerchant['body'] === $oneMerchant['body'] . "Al cliente sono stati indicati 2 conti: può fare il bonifico su uno a sua scelta.\n");
+$threeCfg = $twoCfg;
+$threeCfg['bank_accounts'][] = ['holder' => 'Terzo Conto', 'iban' => 'GB82WEST12345698765432', 'bic' => '', 'name' => 'Altra Banca'];
+[$threeMerchant, $threeCustomer] = hodbook_booking_messages($threeCfg, $mb, $mailToken);
+check('tre conti: Conto 3 senza riga BIC, e "3 conti" all\'esercente', str_contains($threeCustomer['body'], "\n\nConto 3\nIntestatario: Terzo Conto\nIBAN: GB82 WEST 1234 5698 7654 32\nBanca: Altra Banca\n\nImporto: ")
+    && str_contains($threeMerchant['body'], 'Al cliente sono stati indicati 3 conti'));
+
+/* =================================================================== */
+section('Pagina: riquadro "Dati per il bonifico"');
+/* HTML del riquadro con un solo conto, catturato dalla versione precedente: deve restare identico byte per byte. */
+$goldenSingle = <<<'HTML'
+<section class="box mt-6" aria-labelledby="bonifico"><h2 id="bonifico">Dati per il bonifico</h2><p class="rule mt-4" id="regola-istantaneo">Non sono accettati bonifici ordinari: la caparra va versata solo con bonifico istantaneo.</p><p class="mt-3 text-sm">Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.</p><p class="mt-1 text-sm muted">Copia questi dati nell'app o nel sito della tua banca.</p><dl class="kv mt-4"><div><dt><span>Intestatario</span><button type="button" class="copy-btn" data-copy="TITOLARE DI PROVA" aria-label="Copia intestatario" hidden>Copia</button></dt><dd><span class="val copyable">TITOLARE DI PROVA</span></dd></div><div><dt><span>IBAN</span><button type="button" class="copy-btn" data-copy="IT60X0542811101000000123456" aria-label="Copia IBAN" hidden>Copia</button></dt><dd><span class="val copyable val-iban">IT60 X054 2811 1010 0000 0123 456</span></dd></div><div><dt><span>BIC</span><button type="button" class="copy-btn" data-copy="REVOLT21" aria-label="Copia BIC" hidden>Copia</button></dt><dd><span class="val copyable">REVOLT21</span></dd></div><div><dt><span>Banca</span><button type="button" class="copy-btn" data-copy="Revolut" aria-label="Copia banca" hidden>Copia</button></dt><dd><span class="val copyable">Revolut</span></dd></div><div><dt><span>Importo</span><button type="button" class="copy-btn" data-copy="550,00" aria-label="Copia importo" hidden>Copia</button></dt><dd><span class="val copyable nowrap">550,00 €</span></dd></div><div><dt><span>Causale</span><button type="button" class="copy-btn" data-copy="HODGLDN22" aria-label="Copia causale" hidden>Copia</button></dt><dd><span class="val copyable val-code">HODGLDN22</span></dd></div></dl><p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p></section>
+HTML;
+const AUTO_SENTENCE = 'Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.';
+check('un conto, con webhook: HTML identico alla versione precedente', hodbook_bank_section($CFG['bank_accounts'], '550,00 €', '550,00', 'HODGLDN22', true) === $goldenSingle);
+check('un conto, senza webhook: identico salvo la frase sull\'arrivo (come prima)', hodbook_bank_section($CFG['bank_accounts'], '550,00 €', '550,00', 'HODGLDN22', false)
+    === str_replace(AUTO_SENTENCE, 'Il bonifico istantaneo arriva sul nostro conto in pochi secondi.', $goldenSingle));
+check('un conto: nessuno stile in più nella pagina', hodbook_bank_section_css($CFG['bank_accounts']) === '');
+$twoAccounts = $twoCfg['bank_accounts'];
+$html2 = hodbook_bank_section($twoAccounts, '550,00 €', '550,00', 'HODGLDN22', false);
+check('due conti: entrambi gli IBAN, a gruppi e da copiare senza spazi', str_contains($html2, '>IT60 X054 2811 1010 0000 0123 456<') && str_contains($html2, '>IT42 A036 6901 6000 6701 2321 526<')
+    && str_contains($html2, 'data-copy="' . TEST_IBAN . '"') && str_contains($html2, 'data-copy="' . IBAN_2 . '"'));
+check('due conti: titoli h3 "Conto 1" e "Conto 2" in ordine, un solo "oppure" tra i blocchi', str_contains($html2, '<h3 id="conto-1">Conto 1</h3>') && str_contains($html2, '<h3 id="conto-2">Conto 2</h3>')
+    && substr_count($html2, '<div class="or">oppure</div>') === 1
+    && strpos($html2, 'Conto 1</h3>') < strpos($html2, '>oppure<') && strpos($html2, '>oppure<') < strpos($html2, 'Conto 2</h3>'));
+check('due conti: regola in alto, poi la frase sulla scelta, poi i conti', strpos($html2, 'id="regola-istantaneo"') < strpos($html2, 'Puoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.')
+    && strpos($html2, 'basta un solo bonifico.') < strpos($html2, 'Conto 1</h3>'));
+check('due conti: Importo e Causale una volta sola, sotto il loro titolo dopo i conti', substr_count($html2, 'data-copy="550,00"') === 1 && substr_count($html2, 'data-copy="HODGLDN22"') === 1
+    && strpos($html2, 'Conto 2</h3>') < strpos($html2, '>Importo e causale (uguali per tutti i conti)</h3>')
+    && strpos($html2, '(uguali per tutti i conti)</h3>') < strpos($html2, 'data-copy="550,00"'));
+check('due conti: avviso sulla causale invariato in fondo', str_ends_with($html2, '<p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p></section>'));
+preg_match_all('/aria-label="([^"]+)"/', $html2, $labels);
+preg_match_all('/ id="([^"]+)"/', $html2, $ids);
+check('due conti: 10 bottoni Copia con aria-label tutti diversi, id univoci', count($labels[1]) === 10 && count(array_unique($labels[1])) === 10
+    && in_array('Copia IBAN del conto 2', $labels[1], true) && count($ids[1]) === count(array_unique($ids[1])), implode(' | ', $labels[1]));
+check('due conti: frase sull\'arrivo adatta a più conti', str_contains($html2, '<p class="mt-3 text-sm">Il bonifico istantaneo arriva sul conto che scegli in pochi secondi.</p>')
+    && str_contains(hodbook_bank_section($twoAccounts, '550,00 €', '550,00', 'HODGLDN22', true), AUTO_SENTENCE));
+check('due conti: stile in più solo in questo caso', str_contains(hodbook_bank_section_css($twoAccounts), '.accounts .or{') && str_ends_with(hodbook_bank_section_css($twoAccounts), "\n"));
+$html3 = hodbook_bank_section($threeCfg['bank_accounts'], '550,00 €', '550,00', 'HODGLDN22', false);
+check('tre conti: due "oppure", Conto 3 senza BIC', substr_count($html3, '<div class="or">oppure</div>') === 2 && str_contains($html3, '<h3 id="conto-3">Conto 3</h3>')
+    && substr_count($html3, 'aria-label="Copia BIC') === 2);
 
 /* Tentativo di aggiungere intestazioni attraverso il nome (il modulo lo rifiuterebbe: qui si prova il livello email). */
 [$injToken, $inj] = hodbook_booking_create($DB, $CFG, 'maltese', customer(['first_name' => "Mario\r\nBcc: evil@example.com", 'last_name' => "Rossi\nX-Spam: 1"]), $now);
@@ -1095,6 +1199,10 @@ if ($withHttp) {
             && $rulePos < strpos($r['body'], 'TITOLARE DI PROVA') && $rulePos < strpos($r['body'], 'IT60 X054 2811 1010 0000 0123 456'));
         check('spiegazione neutra subito dopo la regola, vecchio suggerimento rimosso', str_contains($r['body'], '</p><p class="mt-3 text-sm">Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.</p>')
             && !str_contains($r['body'], 'Se la tua banca lo permette'));
+        $secStart = strpos($r['body'], '<section class="box mt-6" aria-labelledby="bonifico">');
+        $secHtml = $secStart === false ? '' : substr($r['body'], $secStart, (int)strpos($r['body'], '</section>', $secStart) + 10 - $secStart);
+        check('un conto: riquadro della pagina identico alla versione precedente, nessuno stile in più', $secHtml === str_replace('HODGLDN22', $refMatch, $goldenSingle)
+            && !str_contains($r['body'], '.accounts .or{') && !str_contains($r['body'], 'Conto 1'));
         check('riga sull\'email di riepilogo con indirizzo oscurato', str_contains($r['body'], 'Ti abbiamo inviato un\'email di riepilogo a <strong>m***@example.com</strong>. Se non la trovi controlla la posta indesiderata.'));
         check('link da salvare con Copia link', str_contains($r['body'], 'Salva il link di questa pagina') && str_contains($r['body'], '>Copia link</button>')
             && str_contains($r['body'], $base . '/prenotazione.php?c=' . $bookingToken));
@@ -1214,6 +1322,38 @@ if ($withHttp) {
         $b3 = null;
         $db3 = null;
 
+        /* --- quarta istanza: due conti (bank_extra_accounts), senza webhook: modulo -> pagina -> email --- */
+        $tmp4 = $tmp . '/due-conti';
+        mkdir($tmp4 . '/config', 0700, true);
+        mkdir($tmp4 . '/data', 0700, true);
+        write_config($tmp4, array_merge($testConfig, ['revolut_webhook_secrets' => [], 'bank_extra_accounts' => [$extraAcc]]));
+        $srv4 = $servers[] = $startServer($tmp4);
+        $r = $http('GET', $srv4['base'] . '/prenota.php?tipo=maltese');
+        $secret4 = hodbook_read_app_secret($tmp4 . '/data/app-secret.php');
+        check('due conti: il modulo si apre', $r['code'] === 200 && str_contains($r['body'], 'id="prenota-form"') && $secret4 !== null);
+        $r = $http('POST', $srv4['base'] . '/prenota.php', ['body' => http_build_query(array_merge($goodPost, ['tipo' => 'maltese',
+            'token' => hodbook_form_token(time() - 10, (string)$secret4), 'email' => 'due.conti@example.com']))]);
+        $location4 = $header($r, 'Location');
+        check('due conti: prenotazione creata, redirect 303', $r['code'] === 303 && (bool)preg_match('#^prenotazione\.php\?c=[a-f0-9]{64}$#', $location4), 'HTTP ' . $r['code']);
+        $r = $http('GET', $srv4['base'] . '/' . $location4);
+        $ref4 = preg_match('/Prenotazione (HOD[' . HODBOOK_REF_ALPHABET . ']{6})</', $r['body'], $m4) ? $m4[1] : '';
+        check('due conti, pagina: entrambi gli IBAN e i titoli Conto 1 e Conto 2', $r['code'] === 200 && $ref4 !== ''
+            && str_contains($r['body'], '>IT60 X054 2811 1010 0000 0123 456<') && str_contains($r['body'], '>IT42 A036 6901 6000 6701 2321 526<')
+            && str_contains($r['body'], '<h3 id="conto-1">Conto 1</h3>') && str_contains($r['body'], '<h3 id="conto-2">Conto 2</h3>'));
+        check('due conti, pagina: Importo e Causale una volta sola', substr_count($r['body'], 'data-copy="400,00"') === 1
+            && substr_count($r['body'], 'data-copy="' . $ref4 . '"') === 1 && str_contains($r['body'], '>Importo e causale (uguali per tutti i conti)</h3>'));
+        check('due conti, pagina: frase sulla scelta, "oppure", stile dedicato, regola in alto', str_contains($r['body'], 'Puoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.')
+            && str_contains($r['body'], '<div class="or">oppure</div>') && str_contains($r['body'], '.accounts .or{')
+            && strpos($r['body'], 'id="regola-istantaneo"') < strpos($r['body'], 'Conto 1</h3>'));
+        $files4 = outbox($tmp4, $ref4);
+        $cust4 = eml((string)@file_get_contents(array_values(array_filter($files4, static fn(string $f): bool => str_contains($f, '-cliente-')))[0] ?? ''));
+        $merch4 = eml((string)@file_get_contents(array_values(array_filter($files4, static fn(string $f): bool => str_contains($f, '-esercente-')))[0] ?? ''));
+        check('due conti, email al cliente: i due conti, importo e causale una volta sola', count($files4) === 2
+            && str_contains($cust4['body'], "Puoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.\r\n\r\nConto 1\r\nIntestatario: TITOLARE DI PROVA\r\n")
+            && str_contains($cust4['body'], "\r\nConto 2\r\nIntestatario: Giuseppe Falcicchio\r\nIBAN: IT42 A036 6901 6000 6701 2321 526\r\nBIC: REVOITM2\r\nBanca: Revolut\r\n")
+            && substr_count($cust4['body'], 'Importo: 400,00 €') === 1 && substr_count($cust4['body'], 'Causale: ' . $ref4) === 1);
+        check('due conti, email all\'esercente: indica i 2 conti', str_contains($merch4['body'], "Al cliente sono stati indicati 2 conti: può fare il bonifico su uno a sua scelta.\r\n"));
+
         $cookies = array_filter($allHeaders, static fn(string $h): bool => (bool)preg_match('/^Set-Cookie:/mi', $h));
         check('nessun Set-Cookie in ' . count($allHeaders) . ' risposte', $cookies === [] && count($allHeaders) > 30);
 
@@ -1223,10 +1363,12 @@ if ($withHttp) {
                 proc_close($s['proc']);
             }
         }
-        $serverLog = (string)@file_get_contents($srv['log']) . (string)@file_get_contents($srv2['log']) . (string)@file_get_contents($srv3['log']);
+        $serverLog = (string)@file_get_contents($srv['log']) . (string)@file_get_contents($srv2['log']) . (string)@file_get_contents($srv3['log'])
+            . (string)@file_get_contents($srv4['log']);
         check('server: nessun errore PHP', !preg_match('/PHP (Warning|Notice|Deprecated|Fatal|Parse)/', $serverLog), substr($serverLog, 0, 300));
-        $errLog23 = (string)@file_get_contents($tmp2 . '/data/php-errors.log') . (string)@file_get_contents($tmp3 . '/data/php-errors.log');
-        check('seconda e terza istanza: log errori PHP vuoti', trim($errLog23) === '', substr($errLog23, 0, 300));
+        $errLog23 = (string)@file_get_contents($tmp2 . '/data/php-errors.log') . (string)@file_get_contents($tmp3 . '/data/php-errors.log')
+            . (string)@file_get_contents($tmp4 . '/data/php-errors.log');
+        check('seconda, terza e quarta istanza: log errori PHP vuoti', trim($errLog23) === '', substr($errLog23, 0, 300));
     }
 }
 

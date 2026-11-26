@@ -7,16 +7,29 @@
 
 return [
 
-    /* Intestatario del conto e IBAN su cui il cliente fa il bonifico della caparra.
+    /* Conto principale: intestatario e IBAN su cui il cliente fa il bonifico della caparra.
+       Di solito queste chiavi stanno in bank.php (nel repository); qui servono solo per sovrascriverle.
        L'IBAN si scrive con o senza spazi: viene salvato senza spazi e mostrato a gruppi di 4.
-       Senza intestatario o con un IBAN non valido (controllo mod-97) la prenotazione online resta spenta
-       e la pagina prenota.php propone la prenotazione via WhatsApp. */
+       Senza nessun conto valido (intestatario presente e IBAN che supera il controllo mod-97) la prenotazione
+       online resta spenta e la pagina prenota.php propone la prenotazione via WhatsApp. */
     'bank_account_holder' => '',
     'bank_iban'           => '',
 
     /* BIC/SWIFT (facoltativo, 8 o 11 caratteri) e nome della banca mostrati al cliente. */
     'bank_bic'  => '',
     'bank_name' => 'Revolut',
+
+    /* Altri conti (facoltativo, al massimo 4 conti in tutto): il cliente li vede tutti e sceglie su quale
+       fare il bonifico. Stesse quattro chiavi del conto principale; conti non validi o IBAN ripetuti vengono scartati.
+       Se il principale non è valido ma un conto extra sì, la prenotazione resta attiva con quel conto. */
+    // 'bank_extra_accounts' => [
+    //     [
+    //         'bank_account_holder' => 'Nome Cognome',
+    //         'bank_iban'           => 'IT60 X054 2811 1010 0000 0123 456',
+    //         'bank_bic'            => '',
+    //         'bank_name'           => 'Revolut',
+    //     ],
+    // ],
 
     /* Segreto di firma del webhook Revolut (inizia con wsk_): Revolut Business > API > Webhooks.
        Più segreti = rotazione senza interruzioni (vale una firma valida con uno qualsiasi).

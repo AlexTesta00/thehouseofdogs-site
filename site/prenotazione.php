@@ -92,26 +92,13 @@ $summary = '<section class="box mt-6" aria-labelledby="riepilogo">'
     . '</dl></section>';
 
 $bank = '';
+$bankCss = '';
 if ($status !== 'paid') {
-    if (hodbook_bank_configured($cfg)) {
-        $rows = hodbook_copy_row('Intestatario', $cfg['bank_account_holder'], $cfg['bank_account_holder'])
-            . hodbook_copy_row('IBAN', hodbook_iban_format($cfg['bank_iban']), $cfg['bank_iban'], 'val-iban')
-            . ($cfg['bank_bic'] !== '' ? hodbook_copy_row('BIC', $cfg['bank_bic'], $cfg['bank_bic']) : '')
-            . hodbook_copy_row('Banca', $cfg['bank_name'], $cfg['bank_name'])
-            . hodbook_copy_row('Importo', $amount, hodbook_amount_plain($amountCents), 'nowrap')
-            . hodbook_copy_row('Causale', $reference, $reference, 'val-code');
-        /* La regola sta subito sopra le coordinate. Il sistema non distingue i bonifici ordinari da quelli istantanei:
-           la spiegazione resta neutra e non promette controlli. */
-        $bank = '<section class="box mt-6" aria-labelledby="bonifico">'
-            . '<h2 id="bonifico">Dati per il bonifico</h2>'
-            . '<p class="rule mt-4" id="regola-istantaneo">' . hodbook_e(HODBOOK_INSTANT_TRANSFER_RULE) . '</p>'
-            . '<p class="mt-3 text-sm">' . ($auto
-                ? 'Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.'
-                : 'Il bonifico istantaneo arriva sul nostro conto in pochi secondi.') . '</p>'
-            . '<p class="mt-1 text-sm muted">Copia questi dati nell\'app o nel sito della tua banca.</p>'
-            . '<dl class="kv mt-4">' . $rows . '</dl>'
-            . '<p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p>'
-            . '</section>';
+    /* Uno o più conti (bank.php): con più conti il cliente ne sceglie uno; importo e causale sono gli stessi. */
+    $accounts = hodbook_bank_accounts($cfg);
+    if ($accounts !== []) {
+        $bank = hodbook_bank_section($accounts, $amount, hodbook_amount_plain($amountCents), $reference, $auto);
+        $bankCss = hodbook_bank_section_css($accounts);
     } else {
         $bank = '<section class="box mt-6"><h2>Dati per il bonifico</h2>'
             . '<p class="mt-2">I dati per il bonifico non sono disponibili in questo momento: scrivici su WhatsApp indicando il codice <strong>' . hodbook_e($reference) . '</strong> e ti rispondiamo in giornata.</p></section>';
@@ -155,4 +142,5 @@ hodbook_render_page('Prenotazione ' . $reference, $body, [
     'script' => true,
     /* Senza webhook lo stato non cambia da solo: niente interrogazioni periodiche dal browser. */
     'attrs'  => $auto ? ' data-status="' . hodbook_e($status) . '" data-status-url="' . hodbook_e($statusUrl) . '"' : '',
+    'css'    => $bankCss,
 ]);

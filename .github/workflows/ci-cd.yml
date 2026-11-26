@@ -17,11 +17,13 @@
 #   PAYMENTS_MOLLIE_API_KEY -> chiave API Mollie (test_... o live_...). Il deploy genera config.php sul server da questo
 #                              segreto; la chiave non passa mai dal repository.
 # Segreti per le prenotazioni con bonifico (site/prenota.php; parte privata in site/_prenotazioni/, bloccata dal web):
-#   Le coordinate bancarie mostrate al cliente stanno nel repository, in site/_prenotazioni/config/bank.php.
-#   I tre segreti BOOKING_IBAN, BOOKING_ACCOUNT_HOLDER e BOOKING_BIC sono FACOLTATIVI: se presenti hanno la precedenza.
-#   BOOKING_IBAN            -> IBAN del conto su cui arrivano le caparre (con o senza spazi).
+#   Le coordinate bancarie mostrate al cliente stanno nel repository, in site/_prenotazioni/config/bank.php:
+#   il conto principale (chiavi bank_*) ed eventuali altri conti in bank_extra_accounts (il cliente ne sceglie uno).
+#   I tre segreti BOOKING_IBAN, BOOKING_ACCOUNT_HOLDER e BOOKING_BIC sono FACOLTATIVI e riguardano solo il conto
+#   principale: se presenti hanno la precedenza. Gli altri conti si cambiano soltanto in bank.php.
+#   BOOKING_IBAN            -> IBAN del conto principale su cui arrivano le caparre (con o senza spazi).
 #                              Prima del deploy viene controllato con mod-97: se non è valido il deploy si ferma.
-#   BOOKING_ACCOUNT_HOLDER  -> intestatario del conto, mostrato al cliente nei dati per il bonifico.
+#   BOOKING_ACCOUNT_HOLDER  -> intestatario del conto principale, mostrato al cliente nei dati per il bonifico.
 #   BOOKING_BIC             -> facoltativo: BIC/SWIFT da mostrare al cliente (8 o 11 caratteri).
 #   REVOLUT_WEBHOOK_SECRET  -> segreto di firma del webhook Revolut (inizia con wsk_). Per ruotarlo senza interruzioni
 #                              si possono indicare più segreti separati da virgola.

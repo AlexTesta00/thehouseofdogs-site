@@ -160,13 +160,86 @@ function hodbook_mask_email(string $email): string
 /**
  * Riga del riquadro dati per il bonifico: etichetta e bottone "Copia" sulla stessa riga, valore sotto a tutta larghezza
  * (così anche l'IBAN lungo resta leggibile sul telefono). Il bottone compare solo con JavaScript.
+ * $context completa l'etichetta per i lettori di schermo quando ci sono più conti ("Copia IBAN del conto 2").
  */
-function hodbook_copy_row(string $label, string $display, string $copy, string $extraClass = ''): string
+function hodbook_copy_row(string $label, string $display, string $copy, string $extraClass = '', string $context = ''): string
 {
     $spoken = strtoupper($label) === $label ? $label : hodbook_lower($label);   /* "Copia IBAN", "Copia intestatario" */
     return '<div><dt><span>' . hodbook_e($label) . '</span>'
-        . '<button type="button" class="copy-btn" data-copy="' . hodbook_e($copy) . '" aria-label="Copia ' . hodbook_e($spoken) . '" hidden>Copia</button>'
+        . '<button type="button" class="copy-btn" data-copy="' . hodbook_e($copy) . '" aria-label="Copia ' . hodbook_e($spoken . ($context !== '' ? ' ' . $context : '')) . '" hidden>Copia</button>'
         . '</dt><dd><span class="val copyable' . ($extraClass !== '' ? ' ' . $extraClass : '') . '">' . hodbook_e($display) . '</span></dd></div>';
+}
+
+/**
+ * Riquadro "Dati per il bonifico" della pagina della prenotazione. $accounts: elenco di hodbook_bank_accounts()
+ * (almeno uno); $auto: la pagina si aggiorna da sola (webhook configurato).
+ * Con un solo conto l'HTML è quello di sempre: righe Intestatario, IBAN, BIC, Banca, Importo, Causale.
+ * Con più conti: la frase sulla scelta, un blocco per conto ("Conto 1", "Conto 2"...) separati da "oppure",
+ * poi Importo e Causale una volta sola, perché valgono per tutti i conti.
+ * La regola sta subito sopra le coordinate. Il sistema non distingue i bonifici ordinari da quelli istantanei:
+ * la spiegazione resta neutra e non promette controlli.
+ */
+function hodbook_bank_section(array $accounts, string $amount, string $amountPlain, string $reference, bool $auto): string
+{
+    $multi = count($accounts) > 1;
+    $explain = $auto
+        ? 'Il bonifico istantaneo arriva in pochi secondi: la conferma compare su questa pagina.'
+        : ($multi ? 'Il bonifico istantaneo arriva sul conto che scegli in pochi secondi.' : 'Il bonifico istantaneo arriva sul nostro conto in pochi secondi.');
+    $html = '<section class="box mt-6" aria-labelledby="bonifico">'
+        . '<h2 id="bonifico">Dati per il bonifico</h2>'
+        . '<p class="rule mt-4" id="regola-istantaneo">' . hodbook_e(HODBOOK_INSTANT_TRANSFER_RULE) . '</p>'
+        . '<p class="mt-3 text-sm">' . $explain . '</p>';
+    $amountRows = hodbook_copy_row('Importo', $amount, $amountPlain, 'nowrap')
+        . hodbook_copy_row('Causale', $reference, $reference, 'val-code');
+
+    if (!$multi) {
+        $a = $accounts[0];
+        $html .= '<p class="mt-1 text-sm muted">Copia questi dati nell\'app o nel sito della tua banca.</p>'
+            . '<dl class="kv mt-4">'
+            . hodbook_copy_row('Intestatario', $a['holder'], $a['holder'])
+            . hodbook_copy_row('IBAN', hodbook_iban_format($a['iban']), $a['iban'], 'val-iban')
+            . ($a['bic'] !== '' ? hodbook_copy_row('BIC', $a['bic'], $a['bic']) : '')
+            . hodbook_copy_row('Banca', $a['name'], $a['name'])
+            . $amountRows
+            . '</dl>';
+    } else {
+        $blocks = [];
+        foreach (array_values($accounts) as $i => $a) {
+            $n = $i + 1;
+            $context = 'del conto ' . $n;
+            $blocks[] = '<div class="account" role="group" aria-labelledby="conto-' . $n . '">'
+                . '<h3 id="conto-' . $n . '">Conto ' . $n . '</h3>'
+                . '<dl class="kv">'
+                . hodbook_copy_row('Intestatario', $a['holder'], $a['holder'], '', $context)
+                . hodbook_copy_row('IBAN', hodbook_iban_format($a['iban']), $a['iban'], 'val-iban', $context)
+                . ($a['bic'] !== '' ? hodbook_copy_row('BIC', $a['bic'], $a['bic'], '', $context) : '')
+                . hodbook_copy_row('Banca', $a['name'], $a['name'], '', $context)
+                . '</dl></div>';
+        }
+        $html .= '<p class="mt-4 font-semibold">Puoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.</p>'
+            . '<p class="mt-1 text-sm muted">Copia i dati del conto che scegli nell\'app o nel sito della tua banca.</p>'
+            . '<div class="accounts mt-4">' . implode('<div class="or">oppure</div>', $blocks) . '</div>'
+            . '<h3 class="shared-title">Importo e causale (uguali per tutti i conti)</h3>'
+            . '<dl class="kv mt-3">' . $amountRows . '</dl>';
+    }
+
+    return $html
+        . '<p class="warn mt-5">Scrivi nella causale solo questo codice, senza altro testo: è quello che ci permette di riconoscere il tuo bonifico.</p>'
+        . '</section>';
+}
+
+/** Stile in più per il riquadro con più conti: aggiunto alla pagina solo in quel caso (con un conto la pagina non cambia). */
+function hodbook_bank_section_css(array $accounts): string
+{
+    if (count($accounts) < 2) {
+        return '';
+    }
+    return "    .accounts .account{border-left:3px solid var(--accent);padding:.1rem 0 .1rem .85rem}\n"
+        . "    .legal .account h3{font-size:1rem;font-weight:700;color:var(--accent);margin:0 0 .75rem}\n"
+        . "    .account .val-iban{font-size:clamp(.85rem,3.85vw,1.05rem)}\n"
+        . "    .accounts .or{display:flex;align-items:center;gap:.75rem;margin:1.1rem 0;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}\n"
+        . "    .accounts .or::before,.accounts .or::after{content:\"\";flex:1;height:1px;background:rgba(74,96,121,.3)}\n"
+        . "    .legal h3.shared-title{font-size:1rem;font-weight:700;color:var(--text-primary);margin:1.4rem 0 0;padding-top:1.1rem;border-top:1px solid rgba(74,96,121,.2)}\n";
 }
 
 function hodbook_lower(string $s): string
@@ -176,7 +249,8 @@ function hodbook_lower(string $s): string
 
 /**
  * Stampa la pagina completa e termina. Testa uguale alle pagine legali (termini.php, privacy.php).
- * $opts: status (codice HTTP), script (true = carica assets/js/prenota.js), attrs (attributi extra di <main>).
+ * $opts: status (codice HTTP), script (true = carica assets/js/prenota.js), attrs (attributi extra di <main>),
+ *        css (regole in più, già indentate e terminate da \n, aggiunte in fondo al blocco <style>).
  */
 function hodbook_render_page(string $title, string $body, array $opts = []): never
 {
@@ -188,6 +262,7 @@ function hodbook_render_page(string $title, string $body, array $opts = []): nev
     $version = rawurlencode(HODBOOK_VERSION);
     $script = !empty($opts['script']) ? '<script src="assets/js/prenota.js?v=' . $version . '" defer></script>' : '';
     $attrs = (string)($opts['attrs'] ?? '');
+    $css = (string)($opts['css'] ?? '');
 
     echo <<<HTML
 <!doctype html>
@@ -261,7 +336,7 @@ function hodbook_render_page(string $title, string $body, array $opts = []): nev
     .choice{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:1rem 1.15rem;border-radius:1rem;border:1px solid rgba(74,96,121,.2);background:var(--panel);color:var(--text-primary);text-decoration:none;transition:border-color .2s,transform .2s}
     .choice:hover{border-color:var(--accent);transform:translateY(-1px)}
     .legal a.choice{color:var(--text-primary);text-decoration:none}
-  </style>
+{$css}  </style>
 </head>
 <body class="font-body" style="font-family:'Inter',system-ui,sans-serif">
 <main class="legal mx-auto max-w-xl px-4 sm:px-6 py-10 sm:py-14"{$attrs}>

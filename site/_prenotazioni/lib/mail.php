@@ -178,45 +178,64 @@ function hodbook_booking_messages(array $cfg, array $booking, string $token): ar
     $amount = hodbook_format_amount((int)$booking['amount_cents'], (string)$booking['currency']);
     $link = $cfg['site_url'] . '/prenotazione.php?c=' . $token;
     $fullName = trim($booking['first_name'] . ' ' . $booking['last_name']);
+    $accounts = hodbook_bank_accounts($cfg);
+
+    $merchantLines = [
+        'Nuova richiesta di prenotazione dal sito.',
+        '',
+        'Cucciolo: ' . $product,
+        'Caparra: ' . $amount,
+        'Codice di prenotazione (causale): ' . $reference,
+        '',
+        'Nome: ' . $booking['first_name'],
+        'Cognome: ' . $booking['last_name'],
+        'Email: ' . $booking['email'],
+        'Telefono: ' . $booking['phone'],
+        'Residenza: ' . $booking['residence'],
+        'Codice fiscale: ' . $booking['tax_code'],
+        '',
+        'Condizioni di vendita accettate il: ' . date('d/m/Y H:i', (int)$booking['terms_accepted_at']),
+        'Richiesta inviata il: ' . date('d/m/Y H:i', (int)$booking['created_at']),
+        '',
+        'Pagina della prenotazione (stato del bonifico):',
+        $link,
+        '',
+        'Al cliente abbiamo indicato le coordinate bancarie e che sono accettati solo bonifici istantanei.',
+    ];
+    if (count($accounts) > 1) {
+        $merchantLines[] = 'Al cliente sono stati indicati ' . count($accounts) . ' conti: può fare il bonifico su uno a sua scelta.';
+    }
 
     $merchant = [
         'to'       => $cfg['merchant_email'],
         'reply_to' => (string)$booking['email'],
         'subject'  => 'Nuova richiesta di prenotazione: ' . $product . ' - ' . $fullName . ' (' . $reference . ')',
         'tag'      => $reference . '-esercente',
-        'body'     => implode("\n", [
-            'Nuova richiesta di prenotazione dal sito.',
-            '',
-            'Cucciolo: ' . $product,
-            'Caparra: ' . $amount,
-            'Codice di prenotazione (causale): ' . $reference,
-            '',
-            'Nome: ' . $booking['first_name'],
-            'Cognome: ' . $booking['last_name'],
-            'Email: ' . $booking['email'],
-            'Telefono: ' . $booking['phone'],
-            'Residenza: ' . $booking['residence'],
-            'Codice fiscale: ' . $booking['tax_code'],
-            '',
-            'Condizioni di vendita accettate il: ' . date('d/m/Y H:i', (int)$booking['terms_accepted_at']),
-            'Richiesta inviata il: ' . date('d/m/Y H:i', (int)$booking['created_at']),
-            '',
-            'Pagina della prenotazione (stato del bonifico):',
-            $link,
-            '',
-            'Al cliente abbiamo indicato le coordinate bancarie e che sono accettati solo bonifici istantanei.',
-        ]) . "\n",
+        'body'     => implode("\n", $merchantLines) . "\n",
     ];
 
-    $bank = [
-        'DATI PER IL BONIFICO',
-        'Intestatario: ' . $cfg['bank_account_holder'],
-        'IBAN: ' . hodbook_iban_format($cfg['bank_iban']),
-    ];
-    if ($cfg['bank_bic'] !== '') {
-        $bank[] = 'BIC: ' . $cfg['bank_bic'];
+    /* Con un conto il blocco è quello di sempre; con più conti il cliente ne sceglie uno e importo e causale,
+       uguali per tutti, compaiono una volta sola. */
+    $bank = ['DATI PER IL BONIFICO'];
+    if (count($accounts) <= 1) {
+        $a = $accounts[0] ?? ['holder' => $cfg['bank_account_holder'], 'iban' => $cfg['bank_iban'], 'bic' => $cfg['bank_bic'], 'name' => $cfg['bank_name']];
+        array_push($bank, 'Intestatario: ' . $a['holder'], 'IBAN: ' . hodbook_iban_format($a['iban']));
+        if ($a['bic'] !== '') {
+            $bank[] = 'BIC: ' . $a['bic'];
+        }
+        $bank[] = 'Banca: ' . $a['name'];
+    } else {
+        $bank[] = 'Puoi fare il bonifico su uno di questi conti, a tua scelta: basta un solo bonifico.';
+        foreach (array_values($accounts) as $i => $a) {
+            array_push($bank, '', 'Conto ' . ($i + 1), 'Intestatario: ' . $a['holder'], 'IBAN: ' . hodbook_iban_format($a['iban']));
+            if ($a['bic'] !== '') {
+                $bank[] = 'BIC: ' . $a['bic'];
+            }
+            $bank[] = 'Banca: ' . $a['name'];
+        }
+        $bank[] = '';
     }
-    array_push($bank, 'Banca: ' . $cfg['bank_name'], 'Importo: ' . $amount, 'Causale: ' . $reference);
+    array_push($bank, 'Importo: ' . $amount, 'Causale: ' . $reference);
 
     $customer = [
         'to'       => (string)$booking['email'],

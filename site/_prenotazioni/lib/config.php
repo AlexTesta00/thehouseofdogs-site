@@ -3,6 +3,9 @@
 
 declare(strict_types=1);
 
+/* Conti mostrati al cliente per il bonifico: il principale più gli eventuali extra, al massimo 4 in tutto. */
+const HODBOOK_MAX_BANK_ACCOUNTS = 4;
+
 function hodbook_config_defaults(): array
 {
     return [
@@ -10,6 +13,7 @@ function hodbook_config_defaults(): array
         'bank_iban'                   => '',
         'bank_bic'                    => '',
         'bank_name'                   => 'Revolut',
+        'bank_extra_accounts'         => [],
         'revolut_webhook_secrets'     => [],
         'revolut_account_ids'         => [],
         'products'                    => [
@@ -70,6 +74,9 @@ function hodbook_config_normalize(array $user): array
     $bic = strtoupper(preg_replace('/\s+/', '', is_string($c['bank_bic']) ? $c['bank_bic'] : '') ?? '');
     $out['bank_bic'] = hodbook_bic_valid($bic) ? $bic : '';
     $out['bank_name'] = hodbook_clean_text($c['bank_name'], 80) ?: 'Revolut';
+    /* Le chiavi piatte qui sopra restano (compatibilità) e sono il conto principale; l'elenco completo
+       dei conti validi da mostrare al cliente è bank_accounts. */
+    $out['bank_accounts'] = hodbook_bank_accounts_from($c);
 
     /* Segreti di firma: uno o più (rotazione). Si accetta anche una stringa singola o separata da virgole. */
     $raw = $c['revolut_webhook_secrets'];
@@ -158,10 +165,68 @@ function hodbook_phone_display(array $cfg): string
     return '+' . $n;
 }
 
-/** Banca configurata = intestatario presente e IBAN sintatticamente valido (mod-97). */
+/**
+ * Un conto per il bonifico normalizzato come ['holder', 'iban', 'bic', 'name'], con le regole di sempre:
+ * intestatario non vuoto e IBAN valido (mod-97) obbligatori, BIC non valido -> '', nome della banca vuoto -> 'Revolut'.
+ * $a usa le chiavi di configurazione (bank_account_holder, bank_iban, bank_bic, bank_name). null = conto da scartare.
+ */
+function hodbook_bank_account_normalize(mixed $a): ?array
+{
+    if (!is_array($a)) {
+        return null;
+    }
+    $holder = hodbook_clean_text($a['bank_account_holder'] ?? '', 140);
+    $iban = hodbook_iban_normalize(is_string($a['bank_iban'] ?? null) ? $a['bank_iban'] : '');
+    if ($holder === '' || !hodbook_iban_valid($iban)) {
+        return null;
+    }
+    $bic = strtoupper(preg_replace('/\s+/', '', is_string($a['bank_bic'] ?? null) ? $a['bank_bic'] : '') ?? '');
+    return [
+        'holder' => $holder,
+        'iban'   => $iban,
+        'bic'    => hodbook_bic_valid($bic) ? $bic : '',
+        'name'   => hodbook_clean_text($a['bank_name'] ?? '', 80) ?: 'Revolut',
+    ];
+}
+
+/**
+ * Elenco dei conti validi: prima il principale (chiavi piatte bank_*), se valido, poi quelli di bank_extra_accounts.
+ * I conti non validi e i doppioni di IBAN vengono scartati; al massimo HODBOOK_MAX_BANK_ACCOUNTS.
+ * Un solo conto extra scritto senza la lista esterna viene accettato lo stesso.
+ */
+function hodbook_bank_accounts_from(array $c): array
+{
+    $extra = $c['bank_extra_accounts'] ?? [];
+    if (is_array($extra) && array_key_exists('bank_iban', $extra)) {
+        $extra = [$extra];
+    }
+    $list = [];
+    foreach (array_merge([$c], is_array($extra) ? array_values($extra) : []) as $candidate) {
+        $account = hodbook_bank_account_normalize($candidate);
+        if ($account === null || in_array($account['iban'], array_column($list, 'iban'), true)) {
+            continue;
+        }
+        $list[] = $account;
+        if (count($list) >= HODBOOK_MAX_BANK_ACCOUNTS) {
+            break;
+        }
+    }
+    return $list;
+}
+
+/** Conti da mostrare al cliente (da una configurazione normalizzata, o ricalcolati se mancano). */
+function hodbook_bank_accounts(array $cfg): array
+{
+    if (isset($cfg['bank_accounts']) && is_array($cfg['bank_accounts'])) {
+        return $cfg['bank_accounts'];
+    }
+    return hodbook_bank_accounts_from(array_replace(hodbook_config_defaults(), $cfg));
+}
+
+/** Banca configurata = almeno un conto valido (anche solo un conto extra, se il principale non è valido). */
 function hodbook_bank_configured(array $cfg): bool
 {
-    return $cfg['bank_account_holder'] !== '' && hodbook_iban_valid($cfg['bank_iban']);
+    return hodbook_bank_accounts($cfg) !== [];
 }
 
 /** Webhook configurato = almeno un segreto di firma. */
